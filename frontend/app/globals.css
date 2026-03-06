@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+:root {
+  --bg: #F0EBE3;
+  --fg: #1A1A2E;
+  --terra: #E85D04;
+  --gold: #D4AF37;
+  --savane: #2D6A4F;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar subtile */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F5EFE6; }
+::-webkit-scrollbar-thumb { background: #E85D04; border-radius: 3px; }
+
+/* Kente border animation (décoration) */
+@keyframes kente-slide {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.kente-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #E85D04, #D4AF37, #2D6A4F, #E85D04, #D4AF37);
+  background-size: 300% 100%;
+  animation: kente-slide 6s linear infinite;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(232,93,4,0.15), 0 2px 12px rgba(232,93,4,0.18);
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .font-display { font-family: 'Plus Jakarta Sans', Inter, sans-serif; }
+  .gradient-terra {
+    background: linear-gradient(135deg, #E85D04 0%, #F48C06 50%, #D4AF37 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #E85D04, #D4AF37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
