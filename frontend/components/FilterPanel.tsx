@@ -1,17 +1,33 @@
+// Catégories correspondant exactement aux valeurs stockées en base
 const CATEGORIES = [
-  "Santé", "Agriculture", "Finance", "Éducation",
-  "Environnement", "Démographie", "Énergie", "Transport",
-  "Gouvernance", "Technologie", "Humanitaire", "Économie",
+  "Humanitaire",    // 4523 datasets
+  "Archive",        // 881
+  "Développement",  // 726
+  "Health",         // 309
+  "Economy & Growth", // 283
+  "Gouvernance",    // 200
+  "Education",      // 182
+  "Environnement",  // ~68
 ];
 
 const COUNTRIES = [
   "Cameroun", "Nigeria", "Sénégal", "Côte d'Ivoire", "Ghana",
   "Kenya", "Éthiopie", "Tanzanie", "Afrique du Sud", "Maroc",
+  "Mali", "Niger", "Tchad", "Congo", "Ouganda",
 ];
 
-const FORMATS = ["CSV", "JSON", "Excel", "API", "PDF"];
+// Formats : correspondent aux valeurs partielles présentes dans le champ
+const FORMATS = ["CSV", "JSON", "XLSX", "Excel", "PDF", "API", "SHP", "GEOJSON"];
 
-const SOURCES = ["Banque Mondiale", "HDX", "INS Cameroun", "UN Data", "FAO", "AFDB"];
+// Sources correspondant aux vraies valeurs indexées en base (via LIKE partiel)
+const SOURCES = [
+  "Banque Mondiale",   // ~3568 datasets (WDI + ADI + Archives)
+  "World Bank Group",  // 919 datasets
+  "UNHCR",             // 499 datasets
+  "OpenStreetMap",     // 380 datasets (HOT)
+  "FEWS NET",          // 162 datasets
+  "FAO",               // 70 datasets
+];
 
 interface Filters {
   country: string;
@@ -23,13 +39,15 @@ interface Filters {
 interface FilterPanelProps {
   filters: Filters;
   onChange: (key: string, value: string) => void;
+  dynamicSources?: string[];
 }
 
 import { X, MapPin, Tag, FileText, Landmark } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export default function FilterPanel({ filters, onChange }: FilterPanelProps) {
+export default function FilterPanel({ filters, onChange, dynamicSources }: FilterPanelProps) {
   const activeCount = Object.values(filters).filter(Boolean).length;
+  const sourcesToShow = dynamicSources && dynamicSources.length > 0 ? dynamicSources : SOURCES;
 
   return (
     <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-5 space-y-5 sticky top-20">
@@ -55,10 +73,10 @@ export default function FilterPanel({ filters, onChange }: FilterPanelProps) {
         )}
       </div>
 
-      <FilterSection Icon={MapPin}   label="Pays / Région" options={COUNTRIES}  selected={filters.country}   onSelect={(v) => onChange("country", v)} />
-      <FilterSection Icon={Tag}      label="Catégorie"   options={CATEGORIES} selected={filters.category}  onSelect={(v) => onChange("category", v)} />
-      <FilterSection Icon={FileText} label="Format"      options={FORMATS}   selected={filters.format}    onSelect={(v) => onChange("format", v)} />
-      <FilterSection Icon={Landmark} label="Source"      options={SOURCES}   selected={filters.source}    onSelect={(v) => onChange("source", v)} />
+      <FilterSection Icon={MapPin}   label="Pays / Région" options={COUNTRIES}      selected={filters.country}   onSelect={(v) => onChange("country", v)} />
+      <FilterSection Icon={Tag}      label="Catégorie"   options={CATEGORIES}    selected={filters.category}  onSelect={(v) => onChange("category", v)} />
+      <FilterSection Icon={FileText} label="Format"      options={FORMATS}      selected={filters.format}    onSelect={(v) => onChange("format", v)} />
+      <FilterSection Icon={Landmark} label="Source"      options={sourcesToShow} selected={filters.source}    onSelect={(v) => onChange("source", v)} />
     </div>
   );
 }

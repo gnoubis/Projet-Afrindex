@@ -41,6 +41,35 @@ async def get_countries(db: AsyncSession = Depends(get_db)):
     return [r[0] for r in result.all()]
 
 
+@router.get("/source-names")
+async def get_source_names(db: AsyncSession = Depends(get_db)):
+    """Retourne les sources les plus représentées sous forme de noms courts utilisables comme filtres."""
+    result = await db.execute(
+        select(Dataset.source, func.count(Dataset.id).label("count"))
+        .where(Dataset.source.isnot(None))
+        .group_by(Dataset.source)
+        .order_by(func.count(Dataset.id).desc())
+        .limit(30)
+    )
+    rows = result.all()
+
+    # Groupe les sources par préfixe court (avant " — " ou " - ")
+    from collections import defaultdict
+    groups: dict[str, int] = defaultdict(int)
+    for r in rows:
+        # Extraire le nom court : avant " — " ou " - "
+        name = r.source.strip()
+        for sep in [" — ", " - ", " (", "—", " |"]:
+            if sep in name:
+                name = name.split(sep)[0].strip()
+                break
+        groups[name] += r.count
+
+    # Trier par count décroissant, retourner les 12 premiers
+    sorted_groups = sorted(groups.items(), key=lambda x: x[1], reverse=True)
+    return [{"name": name, "count": count} for name, count in sorted_groups[:12]]
+
+
 @router.get("/stats")
 async def get_stats(db: AsyncSession = Depends(get_db)):
     total = await db.execute(select(func.count()).select_from(Dataset))

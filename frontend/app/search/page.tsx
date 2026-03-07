@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, X, AlertTriangle, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
-import { searchDatasets } from "@/lib/api";
+import { searchDatasets, fetchSourceNames } from "@/lib/api";
 import DatasetCard from "@/components/DatasetCard";
 import FilterPanel from "@/components/FilterPanel";
 
@@ -40,6 +40,13 @@ function SearchContent() {
     queryFn: () => searchDatasets({ q: query || "*", ...filters, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
     enabled: true,
   });
+
+  const { data: sourcesData } = useQuery({
+    queryKey: ["source-names"],
+    queryFn: fetchSourceNames,
+    staleTime: 60_000 * 10, // 10 min
+  });
+  const dynamicSources = sourcesData?.map((s) => s.name) ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +132,7 @@ function SearchContent() {
         {/* Filtres latéraux */}
         {showFilters && (
           <aside className="w-64 flex-shrink-0">
-            <FilterPanel filters={filters} onChange={handleFilterChange} />
+            <FilterPanel filters={filters} onChange={handleFilterChange} dynamicSources={dynamicSources} />
           </aside>
         )}
 

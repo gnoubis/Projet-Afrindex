@@ -77,7 +77,6 @@ _FR_EN: dict[str, str] = {
     "forêt": "forest", "foret": "forest",
     "pêche": "fishing", "peche": "fishing",
     "elevage": "livestock", "élevage": "livestock",
-    "migration": "migration", "deplacement": "displacement",
     "nutrition": "nutrition", "malnutrition": "malnutrition",
     "mortalite": "mortality", "mortalité": "mortality",
     "vaccination": "vaccination", "maladie": "disease",
@@ -131,11 +130,14 @@ async def hybrid_search(
         filter_parts.append("LOWER(d.country) LIKE LOWER(:country)")
         params["country"] = f"%{country}%"
     if category:
-        filter_parts.append("TRIM(LOWER(d.category)) LIKE TRIM(LOWER(:category))")
-        params["category"] = category
+        # Correspondance partielle insensible à la casse et aux accents
+        filter_parts.append("LOWER(d.category) LIKE LOWER(:category)")
+        params["category"] = f"%{category}%"
     if format_:
-        filter_parts.append("LOWER(d.format) = LOWER(:format)")
-        params["format"] = format_
+        # Le champ format peut contenir plusieurs valeurs : "CSV, JSON, Excel"
+        # On utilise ILIKE pour matcher un format contenu dans la chaîne
+        filter_parts.append("LOWER(d.format) LIKE LOWER(:format)")
+        params["format"] = f"%{format_}%"
     if source:
         filter_parts.append("LOWER(d.source) LIKE LOWER(:source)")
         params["source"] = f"%{source}%"

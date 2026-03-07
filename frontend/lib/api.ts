@@ -34,7 +34,12 @@ export async function fetchStats() {
 
 export async function fetchCategories() {
   const { data } = await api.get("/categories");
-  return data;
+  return data as { name: string; count: number }[];
+}
+
+export async function fetchSourceNames() {
+  const { data } = await api.get("/source-names");
+  return data as { name: string; count: number }[];
 }
 
 // ── Admin ──────────────────────────────────────────────────────────────────
