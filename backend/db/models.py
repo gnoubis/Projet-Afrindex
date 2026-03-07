@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import String, Text, DateTime, ARRAY, Integer, func
+from sqlalchemy import String, Text, DateTime, ARRAY, Integer, Boolean, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.database import Base
@@ -52,3 +52,25 @@ class Review(Base):
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     author: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+
+
+class DataSource(Base):
+    """Sources de données configurées par l'administrateur."""
+    __tablename__ = "data_sources"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # Type : "ckan" (HDX, portails gouvernementaux...) | "worldbank" | "csv_url"
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, default="ckan")
+    base_url: Mapped[str] = mapped_column(String(2000), nullable=False)
+    # Filtre pays : liste JSON ex. '["Kenya","Nigeria"]' — vide = tous les pays
+    countries: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Catégorie par défaut assignée aux datasets de cette source
+    default_category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_run: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_status: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # idle|running|done|error
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    datasets_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

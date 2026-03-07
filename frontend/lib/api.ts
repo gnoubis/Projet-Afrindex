@@ -94,3 +94,54 @@ export async function triggerEmbeddings() {
   const { data } = await api.post("/admin/embed/all");
   return data;
 }
+
+// ── Sources management ─────────────────────────────────────────────────────
+
+export interface DataSourceCreate {
+  name: string;
+  source_type: string;
+  base_url: string;
+  countries: string[];
+  default_category?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface DataSourceRecord extends DataSourceCreate {
+  id: number;
+  last_run: string | null;
+  last_status: string;
+  last_error: string | null;
+  datasets_count: number;
+  created_at: string | null;
+}
+
+export async function fetchSources(): Promise<{ sources: DataSourceRecord[] }> {
+  const { data } = await api.get("/admin/sources");
+  return data;
+}
+
+export async function createSource(body: DataSourceCreate): Promise<DataSourceRecord> {
+  const { data } = await api.post("/admin/sources", body);
+  return data;
+}
+
+export async function updateSource(id: number, body: Partial<DataSourceCreate>): Promise<DataSourceRecord> {
+  const { data } = await api.put(`/admin/sources/${id}`, body);
+  return data;
+}
+
+export async function deleteSource(id: number) {
+  const { data } = await api.delete(`/admin/sources/${id}`);
+  return data;
+}
+
+export async function indexSource(id: number) {
+  const { data } = await api.post(`/admin/sources/${id}/index`);
+  return data;
+}
+
+export async function indexAllSources() {
+  const { data } = await api.post("/admin/sources/index-all");
+  return data;
+}

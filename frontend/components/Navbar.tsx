@@ -18,12 +18,6 @@ export default function Navbar() {
 
         {/* Nav links */}
         <div className="flex items-center gap-1">
-          <Link
-            href="/search"
-            className="px-4 py-2 rounded-full text-sm font-medium text-earth-800 hover:bg-terra-50 hover:text-terra-600 transition-all"
-          >
-            Explorer
-          </Link>
           <a
             href="https://github.com"
             target="_blank"

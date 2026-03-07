@@ -3,16 +3,23 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Search, Star, RefreshCw,
-  ArrowLeft, LogOut, Globe2, Database,
+  ArrowLeft, LogOut, Globe2, Database, Plus, Trash2, Play, ToggleLeft, ToggleRight,
 } from "lucide-react";
 import {
   fetchAdminStats,
   fetchSearchLogs,
   fetchAdminReviews,
   deleteReview,
-  triggerIndexation,
   fetchEmbedStatus,
   triggerEmbeddings,
+  fetchSources,
+  createSource,
+  updateSource,
+  deleteSource,
+  indexSource,
+  indexAllSources,
+  type DataSourceCreate,
+  type DataSourceRecord,
 } from "@/lib/api";
 
 const SESSION_KEY = "afrindex_admin_auth";
@@ -32,7 +39,6 @@ type AdminStats = {
     daily: { day: string; cnt: number }[];
   };
   reviews: { total: number; avg_rating: number | null };
-  indexation: { worldbank: IndexStatus; hdx: IndexStatus };
 };
 
 // ── Badge couleur statut ───────────────────────────────────────────────────
@@ -119,11 +125,16 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
-  const [tab, setTab] = useState<"overview" | "searches" | "reviews" | "indexation">("overview");
+  const [tab, setTab] = useState<"overview" | "searches" | "reviews" | "indexation" | "sources">("overview");
+  const [sources, setSources] = useState<DataSourceRecord[]>([]);
+  const [addFormOpen, setAddFormOpen] = useState(false);
+  const [newSource, setNewSource] = useState<DataSourceCreate>({
+    name: "", source_type: "ckan", base_url: "", countries: [], default_category: "", description: "", active: true,
+  });
+  const [sourceMsg, setSourceMsg] = useState("");
   const [embedStatus, setEmbedStatus] = useState<EmbedStatus | null>(null);
   const [embedMsg, setEmbedMsg] = useState("");
   const [loading, setLoading] = useState(true);
-  const [indexMsg, setIndexMsg] = useState("");
 
   // ── Vérification de session ────────────────────────────────────────────
   useEffect(() => {
@@ -141,10 +152,13 @@ export default function AdminPage() {
 
   const reload = useCallback(async () => {
     try {
-      const [s, l, r] = await Promise.all([fetchAdminStats(), fetchSearchLogs(), fetchAdminReviews()]);
+      const [s, l, r, srcs] = await Promise.all([
+        fetchAdminStats(), fetchSearchLogs(), fetchAdminReviews(), fetchSources(),
+      ]);
       setStats(s);
       setLogs(l.logs ?? []);
       setReviews(r.reviews ?? []);
+      setSources(srcs.sources ?? []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -173,23 +187,59 @@ export default function AdminPage() {
     }
   }
 
-  // Rafraîchir toutes les 10s si un indexation est en cours
+  // Rafraîchir toutes les 10s si une indexation est en cours
   useEffect(() => {
-    if (!stats) return;
-    const running = Object.values(stats.indexation).some((s) => s.status === "running");
+    if (!sources.length) return;
+    const running = sources.some((s) => s.last_status === "running");
     if (!running) return;
     const t = setTimeout(reload, 10000);
     return () => clearTimeout(t);
-  }, [stats, reload]);
+  }, [sources, reload]);
 
-  const launchIndex = async (source: "worldbank" | "hdx" | "all") => {
-    setIndexMsg("Lancement en cours…");
+
+  const handleIndexSource = async (id: number) => {
     try {
-      const r = await triggerIndexation(source);
-      setIndexMsg(r.message ?? r.error ?? "");
-      setTimeout(reload, 2000);
+      const r = await indexSource(id);
+      setSourceMsg(r.message ?? "");
+      setTimeout(reload, 1500);
+    } catch (e: any) {
+      setSourceMsg(e?.response?.data?.detail ?? "Erreur");
+    }
+  };
+
+  const handleIndexAll = async () => {
+    try {
+      const r = await indexAllSources();
+      setSourceMsg(r.message ?? "");
+      setTimeout(reload, 1500);
     } catch {
-      setIndexMsg("Erreur lors du lancement");
+      setSourceMsg("Erreur lors du lancement");
+    }
+  };
+
+  const handleToggleSource = async (src: DataSourceRecord) => {
+    await updateSource(src.id, { active: !src.active });
+    reload();
+  };
+
+  const handleDeleteSource = async (id: number) => {
+    if (!confirm("Supprimer cette source ? (les datasets déjà indexés sont conservés)")) return;
+    await deleteSource(id);
+    reload();
+  };
+
+  const handleCreateSource = async () => {
+    if (!newSource.name || !newSource.base_url) {
+      setSourceMsg("Nom et URL requis"); return;
+    }
+    try {
+      await createSource({ ...newSource, countries: newSource.countries.filter(Boolean) });
+      setAddFormOpen(false);
+      setNewSource({ name: "", source_type: "ckan", base_url: "", countries: [], default_category: "", description: "", active: true });
+      setSourceMsg("Source ajoutée avec succès");
+      reload();
+    } catch (e: any) {
+      setSourceMsg(e?.response?.data?.detail ?? "Erreur lors de la création");
     }
   };
 
@@ -214,12 +264,12 @@ export default function AdminPage() {
   const ds = stats?.datasets;
   const sr = stats?.searches;
   const rv = stats?.reviews;
-  const idx = stats?.indexation;
 
   const TABS = [
     { key: "overview",   label: "Vue d'ensemble", Icon: LayoutDashboard },
     { key: "searches",   label: "Recherches",      Icon: Search },
     { key: "reviews",    label: "Avis",            Icon: Star },
+    { key: "sources",    label: "Sources",          Icon: Database },
     { key: "indexation", label: "Indexation",      Icon: RefreshCw },
   ] as const;
 
@@ -414,68 +464,242 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── Indexation ── */}
-        {tab === "indexation" && (
+        {/* ── Sources ── */}
+        {tab === "sources" && (
           <div className="space-y-6">
-            {indexMsg && (
+            {sourceMsg && (
               <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-4 py-3 text-sm">
-                {indexMsg}
+                {sourceMsg}
               </div>
             )}
 
-            {/* Sources */}
-            {(["worldbank", "hdx"] as const).map((src) => {
-              const info = idx?.[src];
-              return (
-                <div key={src} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        {src === "worldbank"
-                          ? <Globe2 className="w-4 h-4 text-blue-500" strokeWidth={1.75} />
-                          : <Database className="w-4 h-4 text-orange-500" strokeWidth={1.75} />
-                        }
-                        <h3 className="font-semibold text-gray-800">
-                          {src === "worldbank" ? "World Bank" : "HDX — Humanitarian Data"}
-                        </h3>
-                        <StatusBadge status={info?.status ?? "idle"} />
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {src === "worldbank"
-                          ? "Indicateurs World Development Indicators & Africa Development Indicators"
-                          : "Datasets humanitaires, santé, eau, alimentation pour 15 pays africains"}
-                      </p>
-                      {info?.last_run && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          Dernière exécution : {new Date(info.last_run).toLocaleString("fr-FR")}
-                        </p>
-                      )}
-                      {info?.error && (
-                        <p className="text-xs text-red-500 mt-1">Erreur : {info.error}</p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => launchIndex(src)}
-                      disabled={info?.status === "running"}
-                      className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {info?.status === "running" ? "En cours…" : "Lancer"}
-                    </button>
+            {/* Boutons globaux */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">Sources de données ({sources.length})</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleIndexAll}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] transition-colors"
+                >
+                  <Play className="w-3.5 h-3.5" /> Tout indexer
+                </button>
+                <button
+                  onClick={() => setAddFormOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl border border-[#C1440E] text-[#C1440E] hover:bg-orange-50 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Ajouter une source
+                </button>
+              </div>
+            </div>
+
+            {/* Formulaire ajout */}
+            {addFormOpen && (
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-4">
+                <h3 className="font-semibold text-gray-800">Nouvelle source</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Nom *</label>
+                    <input value={newSource.name} onChange={(e) => setNewSource((p) => ({ ...p, name: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ex: Kenya Open Data" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Type *</label>
+                    <select value={newSource.source_type} onChange={(e) => setNewSource((p) => ({ ...p, source_type: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm">
+                      <option value="ckan">CKAN (HDX, portails gouvernementaux…)</option>
+                      <option value="worldbank">World Bank API</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">URL de base API *</label>
+                    <input value={newSource.base_url} onChange={(e) => setNewSource((p) => ({ ...p, base_url: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="https://opendata.go.ke/api/3/action" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Catégorie par défaut</label>
+                    <input value={newSource.default_category ?? ""} onChange={(e) => setNewSource((p) => ({ ...p, default_category: e.target.value }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ex: Gouvernance" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Pays (séparés par des virgules)</label>
+                    <input
+                      defaultValue=""
+                      onChange={(e) => setNewSource((p) => ({ ...p, countries: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) }))}
+                      className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Kenya, Uganda, Tanzania" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                    <textarea value={newSource.description ?? ""} onChange={(e) => setNewSource((p) => ({ ...p, description: e.target.value }))}
+                      rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none" />
                   </div>
                 </div>
-              );
-            })}
+                <div className="flex gap-2 pt-2">
+                  <button onClick={handleCreateSource}
+                    className="px-4 py-2 bg-[#C1440E] text-white text-sm font-medium rounded-xl hover:bg-[#A3370B] transition-colors">
+                    Créer la source
+                  </button>
+                  <button onClick={() => setAddFormOpen(false)}
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Table sources */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {sources.length === 0 ? (
+                <div className="px-6 py-12 text-center text-gray-400">
+                  Aucune source configurée. Cliquez sur « Ajouter une source » pour commencer.
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {sources.map((src) => (
+                    <div key={src.id} className="px-5 py-4">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-800">{src.name}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              src.source_type === "ckan" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"
+                            }`}>{src.source_type.toUpperCase()}</span>
+                            <StatusBadge status={src.last_status} />
+                            {!src.active && (
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">Désactivée</span>
+                            )}
+                          </div>
+                          <p className="text-xs font-mono text-gray-400 mt-0.5 truncate">{src.base_url}</p>
+                          {src.description && <p className="text-sm text-gray-500 mt-1">{src.description}</p>}
+                          <div className="flex gap-4 mt-1 text-xs text-gray-400">
+                            {src.countries?.length > 0 && <span>Pays: {src.countries.join(", ")}</span>}
+                            {src.default_category && <span>Catégorie: {src.default_category}</span>}
+                            {src.datasets_count > 0 && <span>{src.datasets_count.toLocaleString()} datasets</span>}
+                            {src.last_run && <span>Dernière exéc.: {new Date(src.last_run).toLocaleString("fr-FR")}</span>}
+                          </div>
+                          {src.last_error && src.last_status === "error" && (
+                            <p className="text-xs text-red-500 mt-1">Erreur: {src.last_error}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleToggleSource(src)}
+                            title={src.active ? "Désactiver" : "Activer"}
+                            className="text-gray-400 hover:text-[#C1440E] transition-colors"
+                          >
+                            {src.active
+                              ? <ToggleRight className="w-5 h-5 text-green-500" />
+                              : <ToggleLeft className="w-5 h-5" />
+                            }
+                          </button>
+                          <button
+                            onClick={() => handleIndexSource(src.id)}
+                            disabled={src.last_status === "running" || !src.active}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Play className="w-3 h-3" />
+                            {src.last_status === "running" ? "En cours" : "Indexer"}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSource(src.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Exemples de sources à ajouter */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+              <h4 className="font-semibold text-amber-800 mb-3">💡 Portails CKAN africains à ajouter</h4>
+              <div className="grid md:grid-cols-2 gap-2 text-sm">
+                {[
+                  { name: "Open Africa", url: "https://open.africa/api/3/action" },
+                  { name: "Kenya Open Data", url: "https://opendata.go.ke/api/3/action" },
+                  { name: "Ghana Open Data", url: "https://data.gov.gh/api/3/action" },
+                  { name: "Nigeria Open Data", url: "https://data.gov.ng/api/3/action" },
+                ].map((ex) => (
+                  <div key={ex.url} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-amber-100">
+                    <div>
+                      <span className="font-medium text-gray-700">{ex.name}</span>
+                      <p className="text-xs text-gray-400 font-mono">{ex.url}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setNewSource((p) => ({ ...p, name: ex.name, source_type: "ckan", base_url: ex.url }));
+                        setAddFormOpen(true);
+                      }}
+                      className="text-xs text-[#C1440E] hover:underline"
+                    >
+                      Utiliser
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Indexation ── */}
+        {tab === "indexation" && (
+          <div className="space-y-6">
+            {sourceMsg && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-4 py-3 text-sm">
+                {sourceMsg}
+              </div>
+            )}
+
+            {/* Redirect to sources tab */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-800">
+              <strong>Conseil :</strong> La gestion dynamique des sources se trouve dans l'onglet
+              <button onClick={() => setTab("sources")} className="underline font-semibold ml-1">Sources</button>.
+              Ici vous pouvez lancer une ré-indexation rapide des sources déjà configurées.
+            </div>
+
+            {/* Sources rapides */}
+            {sources.filter((s) => s.active).map((src) => (
+              <div key={src.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Database className="w-4 h-4 text-orange-500" strokeWidth={1.75} />
+                      <h3 className="font-semibold text-gray-800">{src.name}</h3>
+                      <StatusBadge status={src.last_status} />
+                    </div>
+                    {src.last_run && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Dernière exécution : {new Date(src.last_run).toLocaleString("fr-FR")}
+                      </p>
+                    )}
+                    {src.last_error && src.last_status === "error" && (
+                      <p className="text-xs text-red-500 mt-1">Erreur : {src.last_error}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleIndexSource(src.id)}
+                    disabled={src.last_status === "running"}
+                    className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {src.last_status === "running" ? "En cours…" : "Lancer"}
+                  </button>
+                </div>
+              </div>
+            ))}
 
             {/* Tout indexer */}
             <div className="bg-gradient-to-r from-[#C1440E] to-[#E2A917] rounded-2xl p-5 text-white">
               <h3 className="font-semibold text-lg mb-1">Tout indexer</h3>
               <p className="text-sm opacity-80 mb-4">
-                Lance World Bank + HDX simultanément. The embeddings sémantiques seront générés via OpenAI.
-                L'opération peut prendre 10–30 minutes.
+                Lance toutes les sources actives simultanément. L'opération peut prendre plusieurs minutes.
               </p>
               <button
-                onClick={() => launchIndex("all")}
-                disabled={idx?.worldbank.status === "running" || idx?.hdx.status === "running"}
+                onClick={handleIndexAll}
+                disabled={sources.some((s) => s.last_status === "running")}
                 className="px-5 py-2 bg-white text-[#C1440E] font-semibold rounded-xl hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Indexation complète

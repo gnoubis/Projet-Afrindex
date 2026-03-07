@@ -5,9 +5,17 @@ import Navbar from "@/components/Navbar";
 import { Copy, Copyright } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Afrindex — Moteur de recherche de datasets africains",
+  title: {
+    default: "Afrindex — Moteur de recherche de datasets africains",
+    template: "%s | Afrindex",
+  },
   description:
     "Trouvez des données fiables sur l'Afrique : Banque Mondiale, INS, HDX et bien d'autres sources centralisées en un seul endroit.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

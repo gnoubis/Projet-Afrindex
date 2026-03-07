@@ -1,19 +1,16 @@
-"""Router Admin — statistiques, indexation, logs de recherche, avis."""
+"""Router Admin — statistiques, indexation, sources, logs, avis."""
+import json
 from datetime import datetime
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
-from sqlalchemy import text
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import text, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.database import get_db
+from db.database import get_db, AsyncSessionLocal
+from db.models import DataSource
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-# État d'indexation gardé en mémoire (reset au redémarrage du backend)
-_index_status: dict = {
-    "worldbank": {"status": "idle", "last_run": None, "error": None},
-    "hdx":       {"status": "idle", "last_run": None, "error": None},
-}
 
 # État du batch embedding
 _embed_status: dict = {
@@ -28,7 +25,6 @@ _embed_status: dict = {
 async def _run_batch_embeddings() -> None:
     """Génère les embeddings manquants pour tous les datasets, par lots de 100."""
     from services.embeddings import generate_embeddings_batch
-    from db.database import AsyncSessionLocal
 
     _embed_status["status"] = "running"
     _embed_status["done"] = 0
@@ -72,21 +68,60 @@ async def _run_batch_embeddings() -> None:
         _embed_status["error"] = str(exc)
 
 
-async def _run_scraper(source: str) -> None:
-    _index_status[source]["status"] = "running"
-    _index_status[source]["error"] = None
+async def _run_source(source_id: int) -> None:
+    """Exécute l'indexation pour une source identifiée par son id en base."""
+    async with AsyncSessionLocal() as db:
+        src = (await db.execute(select(DataSource).where(DataSource.id == source_id))).scalar_one_or_none()
+    if not src:
+        return
     try:
-        if source == "worldbank":
+        countries: list[str] = json.loads(src.countries) if src.countries else []
+    except Exception:
+        countries = []
+    if src.source_type == "ckan":
+        from scrapers.ckan import CKANScraper
+        await CKANScraper(
+            source_id=src.id, base_url=src.base_url, name=src.name,
+            countries=countries, default_category=src.default_category,
+        ).run()
+    elif src.source_type == "worldbank":
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("UPDATE data_sources SET last_status='running', last_run=NOW() WHERE id=:id"), {"id": source_id})
+            await db.commit()
+        try:
             from scrapers.worldbank import WorldBankScraper
             await WorldBankScraper().run()
-        else:
-            from scrapers.hdx import HDXScraper
-            await HDXScraper().run()
-        _index_status[source]["status"] = "done"
-        _index_status[source]["last_run"] = datetime.utcnow().isoformat()
-    except Exception as exc:
-        _index_status[source]["status"] = "error"
-        _index_status[source]["error"] = str(exc)
+            async with AsyncSessionLocal() as db:
+                await db.execute(text("UPDATE data_sources SET last_status='done' WHERE id=:id"), {"id": source_id})
+                await db.commit()
+        except Exception as exc:
+            async with AsyncSessionLocal() as db:
+                await db.execute(text("UPDATE data_sources SET last_status='error', last_error=:e WHERE id=:id"), {"id": source_id, "e": str(exc)[:500]})
+                await db.commit()
+    else:
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("UPDATE data_sources SET last_status='error', last_error=:e WHERE id=:id"), {"id": source_id, "e": f"Type inconnu: {src.source_type}"})
+            await db.commit()
+
+
+class SourceCreate(BaseModel):
+    name: str
+    source_type: str = "ckan"
+    base_url: str
+    countries: list[str] = []
+    default_category: str | None = None
+    description: str | None = None
+    active: bool = True
+
+
+class SourceUpdate(BaseModel):
+    name: str | None = None
+    source_type: str | None = None
+    base_url: str | None = None
+    countries: list[str] | None = None
+    default_category: str | None = None
+    description: str | None = None
+    active: bool | None = None
 
 
 # ── Statistiques globales ─────────────────────────────────────────────────────
@@ -154,8 +189,94 @@ async def admin_stats(db: AsyncSession = Depends(get_db)):
             "total": total_reviews,
             "avg_rating": round(float(avg_rating), 2) if avg_rating else None,
         },
-        "indexation": _index_status,
     }
+
+
+# ═ Gestion sources ═════════════════════════════════════════════════════════════════════════════
+
+def _serialize_source(src: DataSource) -> dict:
+    return {
+        "id": src.id,
+        "name": src.name,
+        "source_type": src.source_type,
+        "base_url": src.base_url,
+        "countries": json.loads(src.countries) if src.countries else [],
+        "default_category": src.default_category,
+        "description": src.description,
+        "active": src.active,
+        "last_run": src.last_run.isoformat() if src.last_run else None,
+        "last_status": src.last_status or "idle",
+        "last_error": src.last_error,
+        "datasets_count": src.datasets_count,
+        "created_at": src.created_at.isoformat() if src.created_at else None,
+    }
+
+
+@router.get("/sources")
+async def list_sources(db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(select(DataSource).order_by(DataSource.id))).scalars().all()
+    return {"sources": [_serialize_source(s) for s in rows]}
+
+
+@router.post("/sources", status_code=201)
+async def create_source(body: SourceCreate, db: AsyncSession = Depends(get_db)):
+    src = DataSource(
+        name=body.name, source_type=body.source_type, base_url=body.base_url,
+        countries=json.dumps(body.countries), default_category=body.default_category,
+        description=body.description, active=body.active, last_status="idle",
+    )
+    db.add(src)
+    await db.commit()
+    await db.refresh(src)
+    return _serialize_source(src)
+
+
+@router.put("/sources/{source_id}")
+async def update_source(source_id: int, body: SourceUpdate, db: AsyncSession = Depends(get_db)):
+    src = (await db.execute(select(DataSource).where(DataSource.id == source_id))).scalar_one_or_none()
+    if not src:
+        raise HTTPException(404, f"Source {source_id} introuvable")
+    if body.name is not None: src.name = body.name
+    if body.source_type is not None: src.source_type = body.source_type
+    if body.base_url is not None: src.base_url = body.base_url
+    if body.countries is not None: src.countries = json.dumps(body.countries)
+    if body.default_category is not None: src.default_category = body.default_category
+    if body.description is not None: src.description = body.description
+    if body.active is not None: src.active = body.active
+    await db.commit()
+    await db.refresh(src)
+    return _serialize_source(src)
+
+
+@router.delete("/sources/{source_id}")
+async def remove_source(source_id: int, db: AsyncSession = Depends(get_db)):
+    if not (await db.execute(select(DataSource).where(DataSource.id == source_id))).scalar_one_or_none():
+        raise HTTPException(404, f"Source {source_id} introuvable")
+    await db.execute(delete(DataSource).where(DataSource.id == source_id))
+    await db.commit()
+    return {"deleted": source_id}
+
+
+@router.post("/sources/{source_id}/index")
+async def index_source(source_id: int, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    src = (await db.execute(select(DataSource).where(DataSource.id == source_id))).scalar_one_or_none()
+    if not src:
+        raise HTTPException(404, f"Source {source_id} introuvable")
+    if src.last_status == "running":
+        raise HTTPException(409, f"'{src.name}' est déjà en cours d'indexation")
+    background_tasks.add_task(_run_source, source_id)
+    return {"message": f"Indexation lancée : {src.name}", "source_id": source_id}
+
+
+@router.post("/sources/index-all")
+async def index_all_sources(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(select(DataSource).where(DataSource.active == True))).scalars().all()
+    launched = []
+    for src in rows:
+        if src.last_status != "running":
+            background_tasks.add_task(_run_source, src.id)
+            launched.append({"id": src.id, "name": src.name})
+    return {"message": f"{len(launched)} sources lancées", "sources": launched}
 
 
 # ── Logs de recherche ─────────────────────────────────────────────────────────
@@ -195,26 +316,6 @@ async def delete_review(review_id: int, db: AsyncSession = Depends(get_db)):
     await db.execute(text("DELETE FROM reviews WHERE id = :id"), {"id": review_id})
     await db.commit()
     return {"deleted": review_id}
-
-
-# ── Indexation ────────────────────────────────────────────────────────────────
-
-@router.get("/index/status")
-async def index_status():
-    return _index_status
-
-
-@router.post("/index/{source}")
-async def trigger_indexation(source: str, background_tasks: BackgroundTasks):
-    if source not in ("worldbank", "hdx", "all"):
-        return {"error": f"Source inconnue: {source}. Valeurs: worldbank, hdx, all"}
-    sources = ["worldbank", "hdx"] if source == "all" else [source]
-    for s in sources:
-        if _index_status[s]["status"] == "running":
-            return {"error": f"{s} est déjà en cours d'indexation"}
-    for s in sources:
-        background_tasks.add_task(_run_scraper, s)
-    return {"message": f"Indexation lancée: {', '.join(sources)}", "sources": sources}
 
 
 # ── Embeddings ────────────────────────────────────────────────────────────────
