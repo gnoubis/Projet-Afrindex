@@ -58,12 +58,11 @@ DEFAULT_SOURCES = [
 async def seed():
     async with AsyncSessionLocal() as session:
         for src in DEFAULT_SOURCES:
-            existing = await session.execute(
-                select(DataSource).where(DataSource.base_url == src["base_url"])
-            )
-            if existing.scalar_one_or_none() is not None:
-                print(f"[seed] Déjà présent : {src['name']}")
-                continue
+            # Vérifie si la source existe déjà pour éviter les doublons
+    existing_result = await db.execute(select(DataSource).where(DataSource.name == source["name"]))
+    if existing_result.fetchone() is not None:
+        print(f'[seed] Existe déjà : {source["name"]}')
+        continue
             session.add(DataSource(**src))
             print(f"[seed] Ajouté : {src['name']}")
         await session.commit()
