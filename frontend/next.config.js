@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
-const internalApiUrl = process.env.INTERNAL_API_URL || "http://localhost:8000/api";
+const internalApiUrl = process.env.INTERNAL_API_URL || (isProd
+  ? "http://backend:8000/api"
+  : "http://localhost:8000/api");
 
 const nextConfig = {
   ...(isProd && { output: "standalone" }),
