@@ -48,10 +48,13 @@ function SearchContent() {
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);
 
+  const hasActiveFilters = Object.values(filters).some(f => f);
+  const shouldSearch = query.trim() !== "" || hasActiveFilters;
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["search", query, filters, page],
     queryFn: () => searchDatasets({ q: query || "*", ...filters, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
-    enabled: true,
+    enabled: shouldSearch,
   });
 
   const { data: sourcesData } = useQuery({
@@ -104,6 +107,17 @@ function SearchContent() {
     setInputValue("");
     setQuery("");
     setPage(1);
+    
+    // Reste sur la page de recherche mais sans résultats
+    const hasActiveFilters = Object.values(filters).some(f => f);
+    if (!hasActiveFilters) {
+      startTransition(() => {
+        router.push("/search");
+      });
+      return;
+    }
+    
+    // Sinon garder les filtres et chercher avec requête vide
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v) params.set(k, v);
@@ -195,7 +209,14 @@ function SearchContent() {
 
         {/* Résultats */}
         <div className="flex-1 min-w-0">
-          {isLoading && (
+          {!shouldSearch && (
+            <div className="text-center py-16 rounded-2xl border border-dashed border-earth-200 bg-earth-50">
+              <Search className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
+              <p className="text-earth-800/60 font-medium">Effectuez une recherche pour afficher les résultats.</p>
+              <p className="text-earth-800/40 text-sm mt-1">Entrez un ou plusieurs mots-clés ou utilisez les filtres.</p>
+            </div>
+          )}
+          {shouldSearch && isLoading && (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-earth-200 p-5 animate-pulse">
@@ -206,14 +227,14 @@ function SearchContent() {
               ))}
             </div>
           )}
-          {isError && (
+          {shouldSearch && isError && (
             <div className="text-center py-16 rounded-2xl border border-red-100 bg-red-50">
               <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" strokeWidth={1.5} />
               <p className="text-red-600 font-medium">Erreur de connexion à l'API.</p>
               <p className="text-red-400 text-sm mt-1">Vérifiez que le backend est démarré.</p>
             </div>
           )}
-          {data && !isLoading && (
+          {shouldSearch && data && !isLoading && (
             <>
               <p className="text-sm text-earth-800/50 mb-4">
                 <span className="font-semibold text-ink">{data.total.toLocaleString("fr-FR")}</span> résultat{data.total !== 1 ? "s" : ""}
@@ -240,9 +261,51 @@ function SearchContent() {
                 </div>
               ) : (
                 <>
+                  {/* Légende des badges - Design amélioré */}
+                  <div className="mb-6 p-4 bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/50">
+                    <p className="text-sm font-semibold text-earth-800 mb-3">Comprendre les badges :</p>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100">
+                          HDX
+                        </span>
+                        <span className="text-xs text-earth-700">Source de données</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20">
+                          🌍 Mali
+                        </span>
+                        <span className="text-xs text-earth-700">Pays couvert</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100">
+                          Santé
+                        </span>
+                        <span className="text-xs text-earth-700">Domaine</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20">
+                          CSV
+                        </span>
+                        <span className="text-xs text-earth-700">Format du fichier</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full">
+                          🏷️ Tag
+                        </span>
+                        <span className="text-xs text-earth-700">Mot-clé</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid gap-3">
                     {data.results.map((dataset: any) => (
-                      <DatasetCard key={dataset.id} dataset={dataset} />
+                      <DatasetCard 
+                        key={dataset.id} 
+                        dataset={dataset}
+                        currentQuery={query}
+                        currentFilters={filters}
+                      />
                     ))}
                   </div>
 

@@ -14,6 +14,17 @@ interface Dataset {
   score?: number;
 }
 
+interface DatasetCardProps {
+  dataset: Dataset;
+  currentQuery?: string;
+  currentFilters?: {
+    country: string;
+    category: string;
+    format: string;
+    source: string;
+  };
+}
+
 const FORMAT_COLORS: Record<string, string> = {
   CSV:   "bg-savane-400/10 text-savane-600",
   JSON:  "bg-blue-50 text-blue-600",
@@ -22,7 +33,17 @@ const FORMAT_COLORS: Record<string, string> = {
   PDF:   "bg-red-50 text-red-500",
 };
 
-export default function DatasetCard({ dataset }: { dataset: Dataset }) {
+/**
+ * Construit une URL de recherche en appliquant UN SEUL filtre (badge cliqué)
+ * Ne garde pas la requête précédente - filtre directement par le badge
+ */
+function buildBadgeUrl(filterKey: string, filterValue: string): string {
+  const params = new URLSearchParams();
+  params.set(filterKey, filterValue);
+  return `/search?${params.toString()}`;
+}
+
+export default function DatasetCard({ dataset, currentQuery, currentFilters }: DatasetCardProps) {
   const fmtColor = dataset.format ? (FORMAT_COLORS[dataset.format.toUpperCase()] ?? "bg-earth-100 text-earth-800/60") : "";
 
   return (
@@ -60,7 +81,8 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
       <div className="flex flex-wrap items-center gap-1.5 mt-3">
         {dataset.source && (
           <Link
-            href={`/search?source=${encodeURIComponent(dataset.source)}`}
+            href={buildBadgeUrl("source", dataset.source)}
+            title="Source : filtrer par cette source de données"
             className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100 hover:bg-blue-100 hover:text-blue-700 transition-all cursor-pointer"
           >
             {dataset.source}
@@ -68,7 +90,8 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
         )}
         {dataset.country && (
           <Link
-            href={`/search?country=${encodeURIComponent(dataset.country)}`}
+            href={buildBadgeUrl("country", dataset.country)}
+            title="Pays : filtrer par ce pays"
             className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20 hover:bg-savane-400/20 hover:text-savane-700 transition-all cursor-pointer"
           >
             <MapPin className="w-2.5 h-2.5" /> {dataset.country}
@@ -76,7 +99,8 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
         )}
         {dataset.category && (
           <Link
-            href={`/search?category=${encodeURIComponent(dataset.category)}`}
+            href={buildBadgeUrl("category", dataset.category)}
+            title="Catégorie : filtrer par ce domaine"
             className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100 hover:bg-terra-100 hover:text-terra-700 transition-all cursor-pointer"
           >
             {dataset.category}
@@ -84,7 +108,8 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
         )}
         {dataset.format && (
           <Link
-            href={`/search?format=${encodeURIComponent(dataset.format)}`}
+            href={buildBadgeUrl("format", dataset.format)}
+            title="Format : filtrer par ce format de fichier"
             className={`inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full cursor-pointer transition-all hover:opacity-75 ${fmtColor}`}
           >
             {dataset.format}
@@ -93,7 +118,8 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
         {dataset.tags?.slice(0, 3).map((tag) => (
           <Link
             key={tag}
-            href={`/search?q=${encodeURIComponent(tag)}`}
+            href={buildBadgeUrl("q", tag)}
+            title="Tag : rechercher ce mot-clé"
             className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors cursor-pointer"
           >
             <Tag className="w-2.5 h-2.5" /> {tag}
