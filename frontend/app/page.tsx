@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Search, Sparkles, X, Globe2,
   Activity, Sprout, TrendingUp, GraduationCap,
@@ -10,6 +11,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import StatsBar from "@/components/StatsBar";
 import RecentDatasets from "@/components/RecentDatasets";
+import { searchDatasets } from "@/lib/api";
 
 const POPULAR_CATEGORIES: { label: string; query: string; Icon: LucideIcon; color: string }[] = [
   { label: "Santé",         query: "health",       Icon: Activity,       color: "bg-red-50   text-red-600   border-red-100" },
@@ -23,16 +25,37 @@ const POPULAR_CATEGORIES: { label: string; query: string; Icon: LucideIcon; colo
   { label: "Humanitaire",   query: "humanitaire",  Icon: HeartHandshake, color: "bg-orange-50 text-orange-600 border-orange-100" },
 ];
 
-const SUGGESTIONS = [
+// Fallback suggestions en cas de problème
+const FALLBACK_SUGGESTIONS = [
   "mortalité infantile Cameroun",
   "production agricole Sénégal",
   "PIB Afrique de l'Ouest",
   "accès eau potable Nigeria",
 ];
 
+async function fetchSuggestions() {
+  const response = await fetch("/api/v1/suggestions");
+  if (!response.ok) return { suggestions: FALLBACK_SUGGESTIONS };
+  return response.json();
+}
+
 export default function HomePage() {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const [suggestions, setSuggestions] = useState(FALLBACK_SUGGESTIONS);
+
+  // Charge les vraies suggestions depuis l'API
+  const { data: suggestionsData } = useQuery({
+    queryKey: ["suggestions"],
+    queryFn: fetchSuggestions,
+    staleTime: 60_000 * 60, // 1 heure
+  });
+
+  useEffect(() => {
+    if (suggestionsData?.suggestions) {
+      setSuggestions(suggestionsData.suggestions);
+    }
+  }, [suggestionsData]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +114,7 @@ export default function HomePage() {
 
         {/* Suggestions rapides */}
         <div className="flex flex-wrap justify-center gap-2 mt-4">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button
               key={s}
               onClick={() => router.push(`/search?q=${encodeURIComponent(s)}`)}

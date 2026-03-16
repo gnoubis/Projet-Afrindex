@@ -23,6 +23,72 @@ async def _log_search(db: AsyncSession, query: str, results_count: int,
         pass
 
 
+@router.get("/suggestions")
+async def get_suggestions(db: AsyncSession = Depends(get_db)):
+    """
+    Retourne 4 suggestions de recherche populaires basées sur les vraies données de la BD.
+    Format : "titre court + pays" ou "catégorie + pays"
+    """
+    try:
+        # Récupère 4 datasets random avec titre et pays bien remplis
+        sql = text("""
+            SELECT title, country, category
+            FROM datasets
+            WHERE title IS NOT NULL AND title != ''
+              AND country IS NOT NULL AND country != '' AND country != 'global'
+            ORDER BY RANDOM()
+            LIMIT 4
+        """)
+        result = await db.execute(sql)
+        datasets = [dict(r) for r in result.mappings().all()]
+        
+        suggestions = []
+        for ds in datasets:
+            # Construit une suggestion : "titre court + pays"
+            title = ds.get("title", "").strip()
+            country = ds.get("country", "").strip()
+            
+            # Prend les premiers 2-3 mots du titre
+            title_short = " ".join(title.split()[:3]) if title else ""
+            
+            if title_short and country:
+                suggestion = f"{title_short} {country}"
+                suggestions.append(suggestion)
+        
+        # Si on a moins de 4 suggestions, on en complète avec des catégories
+        if len(suggestions) < 4:
+            sql2 = text("""
+                SELECT DISTINCT country, category
+                FROM datasets
+                WHERE country IS NOT NULL AND country != '' AND country != 'global'
+                  AND category IS NOT NULL AND category != ''
+                ORDER BY RANDOM()
+                LIMIT :limit
+            """)
+            result2 = await db.execute(sql2, {"limit": 4 - len(suggestions)})
+            more_datasets = [dict(r) for r in result2.mappings().all()]
+            for ds in more_datasets:
+                category = ds.get("category", "").strip()
+                country = ds.get("country", "").strip()
+                if category and country:
+                    suggestion = f"{category} {country}"
+                    if suggestion not in suggestions:
+                        suggestions.append(suggestion)
+        
+        return {"suggestions": suggestions[:4]}
+    
+    except Exception as e:
+        # Fallback si erreur
+        return {
+            "suggestions": [
+                "santé Afrique",
+                "agriculture Sénégal",
+                "éducation Nigeria",
+                "environnement Kenya"
+            ]
+        }
+
+
 @router.get("/search")
 async def search(
     background_tasks: BackgroundTasks,
