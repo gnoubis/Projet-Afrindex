@@ -48,6 +48,23 @@ function SearchContent() {
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);
 
+  // Extrait les valeurs uniques des résultats pour les suggestions de filtres
+  const availableFilters = {
+    countries: Array.from(new Set(data?.results?.map((r: any) => r.country)?.filter(Boolean) || []))
+      .sort()
+      .slice(0, 8),
+    categories: Array.from(new Set(data?.results?.map((r: any) => r.category)?.filter(Boolean) || []))
+      .sort()
+      .slice(0, 8),
+    formats: Array.from(new Set(data?.results?.map((r: any) => r.format)?.filter(Boolean) || []))
+      .flatMap(f => (f as string)?.split(/, /) || [])
+      .map(f => f?.trim())
+      .filter(Boolean)
+      .filter((f, i, arr) => arr.indexOf(f) === i)
+      .sort()
+      .slice(0, 8),
+  };
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["search", query, filters, page],
     queryFn: () => searchDatasets({ q: query || "*", ...filters, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
@@ -182,6 +199,77 @@ function SearchContent() {
           >
             Effacer tous les filtres
           </button>
+        </div>
+      )}
+
+      {/* Tags suggérés basés sur les résultats (éléments de la BD) */}
+      {data && !isLoading && data.results.length > 0 && (
+        <div className="mb-6">
+          {/* Pays */}
+          {availableFilters.countries.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-earth-800/60 mb-2 uppercase tracking-wide">Pays</p>
+              <div className="flex flex-wrap gap-2">
+                {availableFilters.countries.map((country) => (
+                  <button
+                    key={country}
+                    onClick={() => handleFilterChange("country", country)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                      filters.country === country
+                        ? "bg-terra-500 text-white border-terra-500"
+                        : "bg-white border-earth-200 text-earth-700 hover:border-earth-400 hover:bg-earth-50"
+                    }`}
+                  >
+                    {country}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Catégories */}
+          {availableFilters.categories.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-earth-800/60 mb-2 uppercase tracking-wide">Catégories</p>
+              <div className="flex flex-wrap gap-2">
+                {availableFilters.categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => handleFilterChange("category", category)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                      filters.category === category
+                        ? "bg-terra-500 text-white border-terra-500"
+                        : "bg-white border-earth-200 text-earth-700 hover:border-earth-400 hover:bg-earth-50"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Formats */}
+          {availableFilters.formats.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-earth-800/60 mb-2 uppercase tracking-wide">Formats</p>
+              <div className="flex flex-wrap gap-2">
+                {availableFilters.formats.map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => handleFilterChange("format", format)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                      filters.format === format
+                        ? "bg-terra-500 text-white border-terra-500"
+                        : "bg-white border-earth-200 text-earth-700 hover:border-earth-400 hover:bg-earth-50"
+                    }`}
+                  >
+                    {format}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
