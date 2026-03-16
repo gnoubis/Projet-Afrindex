@@ -78,6 +78,8 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     )
     countries = await db.execute(
         select(func.count(distinct(Dataset.country))).select_from(Dataset)
+        .where(Dataset.country.isnot(None))
+        .where(Dataset.country != "")
     )
     return {
         "total_datasets": total.scalar(),
