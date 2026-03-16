@@ -35,7 +35,7 @@ async def search(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    total, results = await hybrid_search(
+    total, results, has_exact_matches = await hybrid_search(
         db=db,
         query=q,
         country=country,
@@ -45,5 +45,17 @@ async def search(
         limit=limit,
         offset=offset,
     )
+    
+    # Message explicite si pas de résultats exacts
+    message = None
+    if q and total > 0 and not has_exact_matches:
+        message = f"⚠️ Aucun résultat exact pour « {q} ». Voici des résultats similaires qui pourraient vous intéresser :"
+    
     background_tasks.add_task(_log_search, db, q, total, country, category)
-    return {"query": q, "total": total, "results": results}
+    return {
+        "query": q,
+        "total": total,
+        "results": results,
+        "has_exact_matches": has_exact_matches,
+        "message": message
+    }

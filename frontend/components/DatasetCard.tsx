@@ -59,30 +59,42 @@ export default function DatasetCard({ dataset }: { dataset: Dataset }) {
       {/* Badges */}
       <div className="flex flex-wrap items-center gap-1.5 mt-3">
         {dataset.source && (
-          <span className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100">
+          <Link
+            href={`/search?source=${encodeURIComponent(dataset.source)}`}
+            className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100 hover:bg-blue-100 hover:text-blue-700 transition-all cursor-pointer"
+          >
             {dataset.source}
-          </span>
+          </Link>
         )}
         {dataset.country && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20">
+          <Link
+            href={`/search?country=${encodeURIComponent(dataset.country)}`}
+            className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20 hover:bg-savane-400/20 hover:text-savane-700 transition-all cursor-pointer"
+          >
             <MapPin className="w-2.5 h-2.5" /> {dataset.country}
-          </span>
+          </Link>
         )}
         {dataset.category && (
-          <span className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100">
+          <Link
+            href={`/search?category=${encodeURIComponent(dataset.category)}`}
+            className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100 hover:bg-terra-100 hover:text-terra-700 transition-all cursor-pointer"
+          >
             {dataset.category}
-          </span>
+          </Link>
         )}
         {dataset.format && (
-          <span className={`inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full ${fmtColor}`}>
+          <Link
+            href={`/search?format=${encodeURIComponent(dataset.format)}`}
+            className={`inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full cursor-pointer transition-all hover:opacity-75 ${fmtColor}`}
+          >
             {dataset.format}
-          </span>
+          </Link>
         )}
         {dataset.tags?.slice(0, 3).map((tag) => (
           <Link
             key={tag}
             href={`/search?q=${encodeURIComponent(tag)}`}
-            className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors"
+            className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors cursor-pointer"
           >
             <Tag className="w-2.5 h-2.5" /> {tag}
           </Link>

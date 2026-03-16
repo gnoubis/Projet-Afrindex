@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, startTransition } from "react";
+import { Suspense, startTransition, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,17 +21,30 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [query, setQuery] = useState(searchParams.get("q") || "");
-  const [inputValue, setInputValue] = useState(searchParams.get("q") || "");
+  const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [filters, setFilters] = useState({
-    country:  searchParams.get("country")  || "",
-    category: searchParams.get("category") || "",
-    format:   searchParams.get("format")   || "",
-    source:   searchParams.get("source")   || "",
+    country:  "",
+    category: "",
+    format:   "",
+    source:   "",
   });
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
+
+  // Synchronise l'état avec les paramètres d'URL
+  useEffect(() => {
+    setQuery(searchParams.get("q") || "");
+    setInputValue(searchParams.get("q") || "");
+    setFilters({
+      country:  searchParams.get("country")  || "",
+      category: searchParams.get("category") || "",
+      format:   searchParams.get("format")   || "",
+      source:   searchParams.get("source")   || "",
+    });
+    setPage(1);
+  }, [searchParams]);
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);
 
@@ -53,8 +66,13 @@ function SearchContent() {
     const trimmed = inputValue.trim();
     setQuery(trimmed);
     setPage(1);
+    const params = new URLSearchParams();
+    if (trimmed) params.set("q", trimmed);
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v) params.set(k, v);
+    });
     startTransition(() => {
-      router.push(`/search?${new URLSearchParams({ q: trimmed, ...filters }).toString()}`);
+      router.push(`/search?${params.toString()}`);
     });
   };
 
@@ -62,13 +80,46 @@ function SearchContent() {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     setPage(1);
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    Object.entries(newFilters).forEach(([k, v]) => {
+      if (v) params.set(k, v);
+    });
     startTransition(() => {
-      router.push(`/search?${new URLSearchParams({ q: query, ...newFilters }).toString()}`);
+      router.push(`/search?${params.toString()}`);
+    });
+  };
+
+  const clearAllFilters = () => {
+    setFilters({ country: "", category: "", format: "", source: "" });
+    setQuery("");
+    setInputValue("");
+    setPage(1);
+    startTransition(() => {
+      router.push("/search");
+    });
+  };
+
+  const handleClearInput = () => {
+    setInputValue("");
+    setQuery("");
+    setPage(1);
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v) params.set(k, v);
+    });
+    startTransition(() => {
+      router.push(`/search?${params.toString()}`);
     });
   };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Lien retour */}
+      <a href="/" className="inline-flex items-center gap-1.5 text-sm text-earth-800/60 hover:text-terra-500 transition-colors mb-4">
+        <ChevronLeft className="w-4 h-4" /> Retour à l'accueil
+      </a>
+
       {/* Barre de recherche */}
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
         <div className="flex-1 relative flex items-center bg-white border-2 border-earth-200 rounded-full px-5 py-3 hover:border-terra-300 focus-within:border-terra-400 transition-all shadow-card group">
@@ -81,7 +132,7 @@ function SearchContent() {
             className="flex-1 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none"
           />
           {inputValue && (
-            <button type="button" onClick={() => setInputValue("")} className="ml-2 text-earth-800/30 hover:text-terra-500 transition-colors">
+            <button type="button" onClick={handleClearInput} className="ml-2 text-earth-800/30 hover:text-terra-500 transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -113,7 +164,7 @@ function SearchContent() {
 
       {/* Filtres actifs (chips) */}
       {activeFilters.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
           {activeFilters.map(([key, value]) => (
             <span
               key={key}
@@ -125,6 +176,12 @@ function SearchContent() {
               </button>
             </span>
           ))}
+          <button
+            onClick={clearAllFilters}
+            className="text-xs text-earth-800/50 hover:text-red-500 transition-colors underline"
+          >
+            Effacer tous les filtres
+          </button>
         </div>
       )}
 
@@ -163,6 +220,18 @@ function SearchContent() {
                 {query && <> pour <span className="font-medium text-terra-500">"{query}"</span></>}
                 <span className="ml-2 text-earth-800/30">— page {page} / {Math.max(1, Math.ceil(data.total / PAGE_SIZE))}</span>
               </p>
+
+              {/* Message explicite si pas de résultats exacts */}
+              {data.message && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+                  <div>
+                    <p className="text-sm text-yellow-700 font-medium">{data.message}</p>
+                    <p className="text-xs text-yellow-600 mt-1">Affinez votre recherche pour de meilleurs résultats.</p>
+                  </div>
+                </div>
+              )}
+
               {data.results.length === 0 ? (
                 <div className="text-center py-16 rounded-2xl border border-dashed border-earth-200 bg-white">
                   <SearchX className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />

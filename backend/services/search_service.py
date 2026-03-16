@@ -93,6 +93,49 @@ def _translate_query(q: str) -> str:
     return result if result != q.lower() else q
 
 
+def _extract_important_tokens(query: str) -> list[str]:
+    """
+    Extrait les tokens importants (> 3 caractères) de la requête.
+    Tokens importants = mots-clés qu'on cherche à matcher exactement.
+    """
+    tokens = [t.lower() for t in re.split(r"\s+", query.strip()) if len(t) > 3]
+    return tokens
+
+
+def _count_matching_tokens(text: str, important_tokens: list[str]) -> int:
+    """
+    Compte combien de tokens importants apparaissent dans le texte.
+    """
+    text_lower = text.lower()
+    count = 0
+    for token in important_tokens:
+        if token in text_lower:
+            count += 1
+    return count
+
+
+def _classify_result(row: dict, important_tokens: list[str], threshold: float = 0.5) -> tuple[dict, bool]:
+    """
+    Classifie un résultat comme "exact" ou "partial" basé sur complétude.
+    
+    exact_match = True si on trouve au moins threshold% des tokens importants dans (title + description + tags)
+    """
+    if not important_tokens:
+        return row, True  # Pas de requête = tout est "exact"
+    
+    combined_text = " ".join([
+        row.get("title", ""),
+        row.get("description", ""),
+        " ".join(row.get("tags", []) or [])
+    ])
+    
+    matching_count = _count_matching_tokens(combined_text, important_tokens)
+    match_ratio = matching_count / len(important_tokens)
+    
+    is_exact = match_ratio >= threshold
+    return row, is_exact
+
+
 async def hybrid_search(
     db: AsyncSession,
     query: str,
@@ -102,10 +145,14 @@ async def hybrid_search(
     source: Optional[str] = None,
     limit: int = 20,
     offset: int = 0,
-) -> Tuple[int, list[dict]]:
+) -> Tuple[int, list[dict], bool]:
     """
-    Recherche hybride : 70 % sémantique (pgvector cosine) + 30 % full-text (PostgreSQL FTS).
-    Si l'embedding échoue, bascule automatiquement en FTS seul.
+    Recherche hybride : 70% sémantique + 30% FTS, avec séparation exact/partial matches.
+    
+    Retourne : (total_count, results, has_exact_matches)
+      - total_count: nombre total de résultats
+      - results: liste triée (exact matches d'abord si available, puis partial)
+      - has_exact_matches: True si au moins 1 exact match trouvé
     """
     embedding_str: Optional[str] = None
     clean_query = (query or "").strip().strip("*").strip()
@@ -124,18 +171,15 @@ async def hybrid_search(
 
     # Filtres dynamiques sur d.*
     filter_parts = []
-    params: dict = {"query": translated_query, "limit": limit, "offset": offset}
+    params: dict = {"query": translated_query}
 
     if country:
         filter_parts.append("LOWER(d.country) LIKE LOWER(:country)")
         params["country"] = f"%{country}%"
     if category:
-        # Correspondance partielle insensible à la casse et aux accents
         filter_parts.append("LOWER(d.category) LIKE LOWER(:category)")
         params["category"] = f"%{category}%"
     if format_:
-        # Le champ format peut contenir plusieurs valeurs : "CSV, JSON, Excel"
-        # On utilise ILIKE pour matcher un format contenu dans la chaîne
         filter_parts.append("LOWER(d.format) LIKE LOWER(:format)")
         params["format"] = f"%{format_}%"
     if source:
@@ -143,10 +187,9 @@ async def hybrid_search(
         params["source"] = f"%{source}%"
 
     where_d = ("WHERE " + " AND ".join(filter_parts)) if filter_parts else ""
-    and_d   = ("AND "   + " AND ".join(filter_parts)) if filter_parts else ""
 
+    # Récupère TOUS les résultats (pas de limit sur la requête SQL)
     if embedding_str:
-        # ── Recherche hybride sémantique + FTS ──────────────────────────────
         params.update({"embedding": embedding_str, "sem_w": SEMANTIC_WEIGHT, "fts_w": FTS_WEIGHT,
                         "min_score": 0.01})
 
@@ -184,22 +227,16 @@ async def hybrid_search(
                 SELECT * FROM scored WHERE score >= :min_score
             )
             SELECT
-                COUNT(*) OVER() AS total_count,
                 id, title, description, source, source_url,
                 country, category, format, last_updated, tags, created_at, score
             FROM relevant
             ORDER BY score DESC, created_at DESC
-            LIMIT :limit OFFSET :offset
         """)
 
     else:
-        # ── ILIKE fallback : fonctionne pour tout mot FR/EN/abréviation ─────
-        # Tokenise la requête et cherche chaque mot par sous-chaîne.
-        # "culture" → matche "agriculture", "cultural", etc.
-        # Tokenise les deux versions (originale + traduite) pour plus de coverage
+        # ── ILIKE fallback ─────
         orig_tokens = [t.lower() for t in re.split(r"\s+", clean_query.strip()) if len(t) >= 2]
         trans_tokens = [t.lower() for t in re.split(r"\s+", translated_query.strip()) if len(t) >= 2]
-        # Déduplique tout en gardant l'ordre : traduits en premier (plus précis)
         seen: set = set()
         tokens: list[str] = []
         for t in trans_tokens + orig_tokens:
@@ -208,15 +245,13 @@ async def hybrid_search(
                 tokens.append(t)
 
         if not tokens:
-            # Requête vide → tous les datasets, triés par date
             sql = text(f"""
-                SELECT COUNT(*) OVER() AS total_count,
+                SELECT
                     d.id, d.title, d.description, d.source, d.source_url,
                     d.country, d.category, d.format, d.last_updated, d.tags, d.created_at,
                     0.0::float AS score
                 FROM datasets d {where_d}
                 ORDER BY d.created_at DESC
-                LIMIT :limit OFFSET :offset
             """)
         else:
             ilike_where, score_expr, tok_params = _ilike_clause(tokens, filter_parts)
@@ -230,16 +265,39 @@ async def hybrid_search(
                     FROM datasets d
                     {ilike_where}
                 )
-                SELECT COUNT(*) OVER() AS total_count, *
+                SELECT *
                 FROM ilike_matches
                 ORDER BY score DESC, created_at DESC
-                LIMIT :limit OFFSET :offset
             """)
 
+    # Exécute la requête SANS limit
     result = await db.execute(sql, params)
-    rows = result.mappings().all()
-    total = int(rows[0]["total_count"]) if rows else 0
-    return total, [_clean({k: v for k, v in r.items() if k != "total_count"}) for r in rows]
+    all_rows = [_clean(dict(r)) for r in result.mappings().all()]
+    
+    # Extrait les tokens importants pour la classification exact/partial
+    important_tokens = _extract_important_tokens(translated_query if clean_query else "")
+    
+    # Classifie chaque résultat
+    exact_matches = []
+    partial_matches = []
+    
+    for row in all_rows:
+        _, is_exact = _classify_result(row, important_tokens, threshold=0.5)
+        if is_exact:
+            exact_matches.append(row)
+        else:
+            partial_matches.append(row)
+    
+    # Compose la liste finale : d'abord exacts, puis partials
+    all_results = exact_matches + partial_matches
+    total = len(all_results)
+    
+    # Applique la pagination
+    paginated = all_results[offset:offset + limit]
+    
+    has_exact_matches = len(exact_matches) > 0
+    
+    return total, paginated, has_exact_matches
 
 
 async def similar_datasets(
