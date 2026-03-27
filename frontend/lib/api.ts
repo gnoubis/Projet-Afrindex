@@ -45,6 +45,11 @@ export async function fetchSourceNames() {
   return data as { name: string; count: number }[];
 }
 
+export async function fetchSearchSuggestions() {
+  const { data } = await api.get("/suggestions");
+  return data as { suggestions: string[] };
+}
+
 // ── Admin ──────────────────────────────────────────────────────────────────
 
 export async function fetchAdminStats() {

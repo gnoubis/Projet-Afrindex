@@ -14,13 +14,17 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
 
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Scrollbar subtile */
@@ -49,6 +53,13 @@ body {
 @layer utilities {
   .text-balance { text-wrap: balance; }
   .font-display { font-family: 'Plus Jakarta Sans', Inter, sans-serif; }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .gradient-terra {
     background: linear-gradient(135deg, #E85D04 0%, #F48C06 50%, #D4AF37 100%);
   }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, MapPin, Tag } from "lucide-react";
+import { ExternalLink, MapPin, Tag, Star } from "lucide-react";
 
 interface Dataset {
   id: string;
@@ -125,6 +125,22 @@ export default function DatasetCard({ dataset, currentQuery, currentFilters }: D
             <Tag className="w-2.5 h-2.5" /> {tag}
           </Link>
         ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-earth-100 pt-3">
+        <Link
+          href={`/dataset/${dataset.id}`}
+          className="text-xs font-medium text-earth-800/55 hover:text-terra-500 transition-colors"
+        >
+          Voir les détails
+        </Link>
+        <Link
+          href={`/dataset/${dataset.id}#reviews`}
+          className="inline-flex items-center gap-1.5 rounded-full bg-terra-50 px-3 py-1.5 text-xs font-semibold text-terra-600 hover:bg-terra-100 transition-colors"
+        >
+          <Star className="w-3.5 h-3.5" strokeWidth={1.75} />
+          Donner un avis
+        </Link>
       </div>
     </div>
   );

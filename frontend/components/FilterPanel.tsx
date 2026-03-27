@@ -50,7 +50,7 @@ export default function FilterPanel({ filters, onChange, dynamicSources }: Filte
   const sourcesToShow = dynamicSources && dynamicSources.length > 0 ? dynamicSources : SOURCES;
 
   return (
-    <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-5 space-y-5 sticky top-20">
+    <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-4 sm:p-5 space-y-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between">
         <h3
           className="font-bold text-ink"

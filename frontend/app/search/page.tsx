@@ -4,8 +4,8 @@ import { Suspense, startTransition, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X, AlertTriangle, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
-import { searchDatasets, fetchSourceNames } from "@/lib/api";
+import { Search, SlidersHorizontal, X, AlertTriangle, SearchX, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { searchDatasets, fetchSourceNames, fetchRecentDatasets, fetchSearchSuggestions } from "@/lib/api";
 import DatasetCard from "@/components/DatasetCard";
 import FilterPanel from "@/components/FilterPanel";
 
@@ -62,7 +62,24 @@ function SearchContent() {
     queryFn: fetchSourceNames,
     staleTime: 60_000 * 10, // 10 min
   });
+  const { data: suggestionsData } = useQuery({
+    queryKey: ["search-empty-suggestions"],
+    queryFn: fetchSearchSuggestions,
+    staleTime: 60_000 * 30,
+  });
+  const { data: recentData } = useQuery({
+    queryKey: ["search-empty-recent"],
+    queryFn: fetchRecentDatasets,
+    staleTime: 60_000 * 10,
+  });
   const dynamicSources = sourcesData?.map((s) => s.name) ?? [];
+  const emptySuggestions = suggestionsData?.suggestions ?? [
+    "santé Afrique",
+    "agriculture Sénégal",
+    "éducation Nigeria",
+    "environnement Kenya",
+  ];
+  const recentDatasets = recentData?.results?.slice(0, 4) ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,15 +144,25 @@ function SearchContent() {
     });
   };
 
+  const alternativeQueries: string[] = data?.alternative_queries ?? [];
+  const alternativeDatasets: any[] = data?.alternative_datasets ?? [];
+  const openSuggestedSearch = (suggestion: string) => {
+    const params = new URLSearchParams();
+    params.set("q", suggestion);
+    startTransition(() => {
+      router.push(`/search?${params.toString()}`);
+    });
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Lien retour */}
       <a href="/" className="inline-flex items-center gap-1.5 text-sm text-earth-800/60 hover:text-terra-500 transition-colors mb-4">
         <ChevronLeft className="w-4 h-4" /> Retour à l'accueil
       </a>
 
       {/* Barre de recherche */}
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 mb-6">
         <div className="flex-1 relative flex items-center bg-white border-2 border-earth-200 rounded-full px-5 py-3 hover:border-terra-300 focus-within:border-terra-400 transition-all shadow-card group">
           <Search className="w-4 h-4 text-earth-800/30 group-focus-within:text-terra-400 transition-colors flex-shrink-0 mr-3" />
           <input
@@ -153,14 +180,14 @@ function SearchContent() {
         </div>
         <button
           type="submit"
-          className="bg-terra-500 text-white font-semibold px-6 py-3 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-search text-sm"
+          className="bg-terra-500 text-white font-semibold px-6 py-3 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-search text-sm w-full sm:w-auto"
         >
           Rechercher
         </button>
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 border px-4 py-3 rounded-full text-sm font-medium transition-all ${
+          className={`flex w-full sm:w-auto justify-center items-center gap-2 border px-4 py-3 rounded-full text-sm font-medium transition-all ${
             showFilters || activeFilters.length > 0
               ? "bg-terra-50 border-terra-300 text-terra-600"
               : "bg-white border-earth-200 text-earth-800/60 hover:bg-earth-50"
@@ -199,10 +226,10 @@ function SearchContent() {
         </div>
       )}
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Filtres latéraux */}
         {showFilters && (
-          <aside className="w-64 flex-shrink-0">
+          <aside className="w-full lg:w-64 lg:flex-shrink-0">
             <FilterPanel filters={filters} onChange={handleFilterChange} dynamicSources={dynamicSources} />
           </aside>
         )}
@@ -210,10 +237,44 @@ function SearchContent() {
         {/* Résultats */}
         <div className="flex-1 min-w-0">
           {!shouldSearch && (
-            <div className="text-center py-16 rounded-2xl border border-dashed border-earth-200 bg-earth-50">
-              <Search className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
-              <p className="text-earth-800/60 font-medium">Effectuez une recherche pour afficher les résultats.</p>
-              <p className="text-earth-800/40 text-sm mt-1">Entrez un ou plusieurs mots-clés ou utilisez les filtres.</p>
+            <div className="space-y-5">
+              <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-earth-50">
+                <Search className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
+                <p className="text-earth-800/60 font-medium">Explorez des sujets populaires.</p>
+                <p className="text-earth-800/40 text-sm mt-1">Choisissez une suggestion ou découvrez les derniers datasets ajoutés.</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
+                  <p className="text-sm font-semibold text-earth-800">Recherches suggérées</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {emptySuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => openSuggestedSearch(suggestion)}
+                      className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {recentDatasets.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-earth-800">Datasets récents à découvrir</p>
+                  </div>
+                  <div className="grid gap-3">
+                    {recentDatasets.map((dataset: any) => (
+                      <DatasetCard key={dataset.id} dataset={dataset} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {shouldSearch && isLoading && (
@@ -253,11 +314,72 @@ function SearchContent() {
                 </div>
               )}
 
+              {data.message && alternativeQueries.length > 0 && (
+                <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-earth-800">Reformuler la recherche</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {alternativeQueries.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => openSuggestedSearch(suggestion)}
+                        className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {data.results.length === 0 ? (
-                <div className="text-center py-16 rounded-2xl border border-dashed border-earth-200 bg-white">
-                  <SearchX className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
-                  <p className="text-earth-800/60 font-medium">Aucun dataset trouvé.</p>
-                  <p className="text-earth-800/40 text-sm mt-1">Essayez des mots-clés différents ou modifiez les filtres.</p>
+                <div className="space-y-5">
+                  <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-white">
+                    <SearchX className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
+                    <p className="text-earth-800/60 font-medium">Aucun dataset trouvé.</p>
+                    <p className="text-earth-800/40 text-sm mt-1">On n’a rien trouvé pour cette requête exacte, mais voici d’autres pistes utiles.</p>
+                  </div>
+
+                  {alternativeQueries.length > 0 && (
+                    <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
+                        <p className="text-sm font-semibold text-earth-800">Essayez aussi</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {alternativeQueries.map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => openSuggestedSearch(suggestion)}
+                            className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {alternativeDatasets.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
+                        <p className="text-sm font-semibold text-earth-800">Datasets suggérés</p>
+                      </div>
+                      <div className="grid gap-3">
+                        {alternativeDatasets.map((dataset: any) => (
+                          <DatasetCard
+                            key={dataset.id}
+                            dataset={dataset}
+                            currentQuery={query}
+                            currentFilters={filters}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
@@ -311,7 +433,7 @@ function SearchContent() {
 
                   {/* Pagination */}
                   {data.total > PAGE_SIZE && (
-                    <div className="flex items-center justify-center gap-2 mt-8">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}

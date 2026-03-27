@@ -67,44 +67,44 @@ export default function HomePage() {
   return (
     <div>
       {/* ── HERO : style Google centré ── */}
-      <section className="pt-20 pb-12 px-4 text-center">
+      <section className="pt-12 sm:pt-20 pb-10 sm:pb-12 px-4 text-center">
         {/* Logo géant */}
         <div className="mb-6 inline-flex flex-col items-center">
-          <Globe2 className="w-16 h-16 mb-3 text-terra-500" strokeWidth={1.5} />
+          <Globe2 className="w-12 h-12 sm:w-16 sm:h-16 mb-3 text-terra-500" strokeWidth={1.5} />
           <h1
-            className="text-5xl font-display font-extrabold tracking-tight gradient-text"
+            className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight gradient-text"
             style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
           >
             Afrindex
           </h1>
-          <p className="mt-2 text-earth-800/60 text-base font-medium">
+          <p className="mt-2 text-earth-800/60 text-sm sm:text-base font-medium px-2">
             Le moteur de recherche de datasets africains
           </p>
         </div>
 
         {/* Barre de recherche principale */}
         <form onSubmit={handleSearch} className="max-w-2xl mx-auto mt-8">
-          <div className="relative flex items-center bg-white border-2 border-earth-200 rounded-full px-5 py-3.5 shadow-card hover:shadow-card-hover hover:border-terra-300 transition-all group">
-            <Search className="w-5 h-5 text-earth-200 group-hover:text-terra-400 transition-colors flex-shrink-0 mr-3" />
+          <div className="relative flex flex-wrap sm:flex-nowrap items-center gap-3 bg-white border-2 border-earth-200 rounded-[2rem] px-4 sm:px-5 py-3.5 shadow-card hover:shadow-card-hover hover:border-terra-300 transition-all group">
+            <Search className="w-5 h-5 text-earth-200 group-hover:text-terra-400 transition-colors flex-shrink-0" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher des données africaines…"
-              className="search-input flex-1 bg-transparent text-ink placeholder-earth-200 text-base outline-none"
+              className="search-input min-w-0 flex-1 bg-transparent text-ink placeholder-earth-200 text-sm sm:text-base outline-none"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="ml-2 text-earth-200 hover:text-terra-400 transition-colors"
+                className="text-earth-200 hover:text-terra-400 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
             <button
               type="submit"
-              className="ml-3 flex items-center gap-2 bg-terra-500 hover:bg-terra-600 text-white text-sm font-semibold px-5 py-2 rounded-full transition-all shadow-sm hover:shadow-search"
+              className="flex w-full sm:w-auto justify-center items-center gap-2 bg-terra-500 hover:bg-terra-600 text-white text-sm font-semibold px-5 py-2 rounded-full transition-all shadow-sm hover:shadow-search"
             >
               <Sparkles className="w-3.5 h-3.5" />
               Rechercher
@@ -130,7 +130,7 @@ export default function HomePage() {
       <StatsBar />
 
       {/* Catégories populaires */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         <h2 className="text-xl font-display font-bold text-ink mb-5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
           Catégories populaires
         </h2>
@@ -151,7 +151,7 @@ export default function HomePage() {
       </section>
 
       {/* Derniers datasets */}
-      <section className="max-w-5xl mx-auto px-6 pb-20">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-20">
         <h2 className="text-xl font-display font-bold text-ink mb-5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
           Derniers datasets ajoutés
         </h2>

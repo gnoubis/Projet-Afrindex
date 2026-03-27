@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { ExternalLink, Tag, ArrowLeft, MapPin, Calendar, CheckCircle, Star, MessageSquarePlus, Users, SearchX, X } from "lucide-react";
+import { ExternalLink, Tag, ArrowLeft, MapPin, Calendar, CheckCircle, Star, MessageSquarePlus, Users, SearchX } from "lucide-react";
 import Link from "next/link";
 import { fetchDataset, submitReview, fetchDatasetReviews } from "@/lib/api";
 import DatasetCard from "@/components/DatasetCard";
@@ -32,7 +32,6 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
   const [author, setAuthor] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
 
   const { data: reviews = [], isLoading: loadingReviews } = useQuery({
     queryKey: ["reviews", datasetId],
@@ -57,110 +56,95 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
   }
 
   return (
-    <section className="mt-6 space-y-4">
-      {/* ── Bandeau d'invitation ── */}
-      {!formOpen && !sent && (
-        <div className="bg-gradient-to-r from-terra-500 to-terra-600 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-md">
-          <div className="text-white">
-            <p className="font-bold text-base leading-snug">Ce dataset vous a été utile ?</p>
-            <p className="text-terra-100 text-sm mt-0.5">Laissez un avis et aidez la communauté à mieux choisir.</p>
-          </div>
-          <button
-            onClick={() => setFormOpen(true)}
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-terra-600 text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-terra-50 transition-all shadow-sm"
-          >
-            <Star className="w-4 h-4 fill-terra-500 text-terra-500" strokeWidth={1.5} />
-            Donner mon avis
-          </button>
-        </div>
-      )}
+    <section id="reviews" className="mt-6 space-y-4 scroll-mt-24">
+      <div className="bg-gradient-to-r from-terra-500 to-terra-600 rounded-2xl p-5 shadow-md text-white">
+        <p className="font-bold text-base leading-snug">Ce dataset vous a été utile ?</p>
+        <p className="text-terra-100 text-sm mt-0.5">Votre avis est visible juste ici et aide les autres utilisateurs à choisir plus vite.</p>
+      </div>
 
-      {/* ── Formulaire (ouvert au clic ou après soumission) ── */}
-      {(formOpen || sent) && (
-        <div className="bg-white rounded-2xl border-2 border-terra-200 shadow-md p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-ink flex items-center gap-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-              <MessageSquarePlus className="w-5 h-5 text-terra-500" strokeWidth={1.75} />
-              Votre avis sur ce dataset
-            </h3>
-            {!sent && (
-              <button onClick={() => setFormOpen(false)} className="text-earth-800/30 hover:text-earth-800/60 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {sent ? (
-            <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold">Merci pour votre avis !</p>
-                <p className="text-xs text-green-600/70 mt-0.5">Il est maintenant visible par la communauté.</p>
-              </div>
+      <div className="bg-white rounded-2xl border-2 border-terra-200 shadow-md p-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="font-bold text-ink flex items-center gap-2" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+            <MessageSquarePlus className="w-5 h-5 text-terra-500" strokeWidth={1.75} />
+            Votre avis sur ce dataset
+          </h3>
+          {avgRating && (
+            <div className="flex items-center gap-2 text-sm">
+              <StarDisplay rating={Math.round(avgRating)} />
+              <span className="font-bold text-ink">{avgRating}</span>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Note */}
-              <div>
-                <p className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide mb-2">Votre note *</p>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => setHover(star)}
-                      onMouseLeave={() => setHover(0)}
-                      className={`transition-all hover:scale-110 ${
-                        star <= (hover || rating) ? "text-amber-400 fill-amber-400" : "text-gray-200"
-                      }`}
-                    >
-                      <Star className="w-8 h-8" strokeWidth={1.5} />
-                    </button>
-                  ))}
-                  {rating > 0 && (
-                    <span className="text-sm font-medium text-earth-800/60 ml-3">
-                      {["", "Très mauvais", "Mauvais", "Correct", "Bon", "Excellent"][rating]}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide">Votre nom</label>
-                  <input
-                    type="text"
-                    placeholder="Anonyme"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide">Commentaire</label>
-                  <input
-                    type="text"
-                    placeholder="Qualité, utilité, accessibilité…"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={!rating || loading}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-terra-500 text-white text-sm font-bold rounded-xl hover:bg-terra-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-              >
-                <CheckCircle className="w-4 h-4" />
-                {loading ? "Envoi…" : "Publier mon avis"}
-              </button>
-            </form>
           )}
         </div>
-      )}
+
+        {sent ? (
+          <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Merci pour votre avis !</p>
+              <p className="text-xs text-green-600/70 mt-0.5">Il est maintenant visible par la communauté.</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide mb-2">Votre note *</p>
+              <div className="flex flex-wrap items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHover(star)}
+                    onMouseLeave={() => setHover(0)}
+                    className={`transition-all hover:scale-110 ${
+                      star <= (hover || rating) ? "text-amber-400 fill-amber-400" : "text-gray-200"
+                    }`}
+                  >
+                    <Star className="w-8 h-8" strokeWidth={1.5} />
+                  </button>
+                ))}
+                {rating > 0 && (
+                  <span className="text-sm font-medium text-earth-800/60 sm:ml-3">
+                    {["", "Très mauvais", "Mauvais", "Correct", "Bon", "Excellent"][rating]}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide">Votre nom</label>
+                <input
+                  type="text"
+                  placeholder="Anonyme"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-earth-800/50 uppercase tracking-wide">Commentaire</label>
+                <input
+                  type="text"
+                  placeholder="Qualité, utilité, accessibilité…"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={!rating || loading}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-terra-500 text-white text-sm font-bold rounded-xl hover:bg-terra-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+            >
+              <CheckCircle className="w-4 h-4" />
+              {loading ? "Envoi…" : "Publier mon avis"}
+            </button>
+          </form>
+        )}
+      </div>
 
       {/* ── Avis existants ── */}
       <div className="bg-white rounded-2xl border border-earth-200 shadow-sm p-5">
@@ -258,7 +242,7 @@ export default function DatasetPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <Link
         href="/search"
         className="inline-flex items-center gap-2 text-sm text-earth-800/50 hover:text-terra-500 mb-6 transition-colors font-medium"
@@ -267,11 +251,11 @@ export default function DatasetPage() {
       </Link>
 
       {/* Carte principale */}
-      <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-8 mb-6">
+      <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-5 sm:p-8 mb-6">
         {/* En-tête */}
-        <div className="flex items-start justify-between gap-6 mb-5">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6 mb-5">
           <h1
-            className="text-2xl font-bold text-ink leading-snug"
+            className="text-xl sm:text-2xl font-bold text-ink leading-snug"
             style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
           >
             {data.title}
@@ -281,7 +265,7 @@ export default function DatasetPage() {
               href={data.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 flex items-center gap-2 bg-terra-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-search"
+              className="w-full sm:w-auto justify-center flex-shrink-0 flex items-center gap-2 bg-terra-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-search"
             >
               Accéder <ExternalLink className="w-4 h-4" />
             </a>
@@ -319,7 +303,7 @@ export default function DatasetPage() {
 
         {/* Description */}
         {data.description && (
-          <p className="text-[15px] text-earth-800/70 leading-relaxed mb-6">{data.description}</p>
+          <p className="text-sm sm:text-[15px] text-earth-800/70 leading-relaxed mb-6">{data.description}</p>
         )}
 
         {/* Divider */}

@@ -276,15 +276,15 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-[#F0EBE3]">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="bg-white border-b shadow-sm px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <a href="/" className="inline-flex items-center gap-1.5 text-[#C1440E] hover:underline text-sm">
             <ArrowLeft className="w-3.5 h-3.5" /> Afrindex
           </a>
           <span className="text-gray-300">/</span>
-          <h1 className="text-xl font-bold text-gray-800">Dashboard Admin</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-gray-800">Dashboard Admin</h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <button onClick={reload} className="inline-flex items-center gap-1.5 text-sm text-[#C1440E] hover:underline">
             <RefreshCw className="w-3.5 h-3.5" /> Actualiser
           </button>
@@ -298,13 +298,13 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b px-6">
-        <div className="flex gap-1">
+      <div className="bg-white border-b px-4 sm:px-6">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 tab === t.key
                   ? "border-[#C1440E] text-[#C1440E]"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -317,7 +317,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* ── Vue d'ensemble ── */}
         {tab === "overview" && (
@@ -349,14 +349,14 @@ export default function AdminPage() {
             {/* Embeddings */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <h3 className="font-semibold text-gray-800 mb-2">Couverture sémantique</h3>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-gray-100 rounded-full h-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex-1 bg-gray-100 rounded-full h-3">
                   <div
                     className="h-3 rounded-full bg-gradient-to-r from-[#C1440E] to-[#E2A917]"
                     style={{ width: ds?.total ? `${Math.round(((ds.with_embeddings ?? 0) / ds.total) * 100)}%` : "0%" }}
                   />
                 </div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 break-words">
                   {ds?.with_embeddings?.toLocaleString()} / {ds?.total?.toLocaleString()} datasets avec embedding
                 </span>
               </div>
@@ -424,7 +424,7 @@ export default function AdminPage() {
         {/* ── Avis ── */}
         {tab === "reviews" && (
           <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <StatCard label="Total avis" value={rv?.total ?? 0} color="border-yellow-200 bg-yellow-50 text-yellow-900" />
               <StatCard label="Note moyenne" value={rv?.avg_rating ? `${rv.avg_rating} / 5` : "—"} color="border-orange-200 bg-orange-50 text-orange-900" />
             </div>
@@ -474,18 +474,18 @@ export default function AdminPage() {
             )}
 
             {/* Boutons globaux */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-gray-800">Sources de données ({sources.length})</h2>
-              <div className="flex gap-2">
+              <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2">
                 <button
                   onClick={handleIndexAll}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] transition-colors"
+                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] transition-colors"
                 >
                   <Play className="w-3.5 h-3.5" /> Tout indexer
                 </button>
                 <button
                   onClick={() => setAddFormOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl border border-[#C1440E] text-[#C1440E] hover:bg-orange-50 transition-colors"
+                  className="inline-flex w-full sm:w-auto justify-center items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl border border-[#C1440E] text-[#C1440E] hover:bg-orange-50 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" /> Ajouter une source
                 </button>
@@ -533,7 +533,7 @@ export default function AdminPage() {
                       rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none" />
                   </div>
                 </div>
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   <button onClick={handleCreateSource}
                     className="px-4 py-2 bg-[#C1440E] text-white text-sm font-medium rounded-xl hover:bg-[#A3370B] transition-colors">
                     Créer la source
@@ -556,7 +556,7 @@ export default function AdminPage() {
                 <div className="divide-y">
                   {sources.map((src) => (
                     <div key={src.id} className="px-5 py-4">
-                      <div className="flex items-start gap-4">
+                      <div className="flex flex-col sm:flex-row items-start gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-gray-800">{src.name}</span>
@@ -570,7 +570,7 @@ export default function AdminPage() {
                           </div>
                           <p className="text-xs font-mono text-gray-400 mt-0.5 truncate">{src.base_url}</p>
                           {src.description && <p className="text-sm text-gray-500 mt-1">{src.description}</p>}
-                          <div className="flex gap-4 mt-1 text-xs text-gray-400">
+                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1 text-xs text-gray-400">
                             {src.countries?.length > 0 && <span>Pays: {src.countries.join(", ")}</span>}
                             {src.default_category && <span>Catégorie: {src.default_category}</span>}
                             {src.datasets_count > 0 && <span>{src.datasets_count.toLocaleString()} datasets</span>}
@@ -580,7 +580,7 @@ export default function AdminPage() {
                             <p className="text-xs text-red-500 mt-1">Erreur: {src.last_error}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex w-full sm:w-auto items-center gap-2 flex-shrink-0">
                           <button
                             onClick={() => handleToggleSource(src)}
                             title={src.active ? "Désactiver" : "Activer"}
@@ -594,7 +594,7 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleIndexSource(src.id)}
                             disabled={src.last_status === "running" || !src.active}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex flex-1 sm:flex-none justify-center items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             <Play className="w-3 h-3" />
                             {src.last_status === "running" ? "En cours" : "Indexer"}
@@ -664,8 +664,8 @@ export default function AdminPage() {
             {/* Sources rapides */}
             {sources.filter((s) => s.active).map((src) => (
               <div key={src.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <Database className="w-4 h-4 text-orange-500" strokeWidth={1.75} />
                       <h3 className="font-semibold text-gray-800">{src.name}</h3>
@@ -683,7 +683,7 @@ export default function AdminPage() {
                   <button
                     onClick={() => handleIndexSource(src.id)}
                     disabled={src.last_status === "running"}
-                    className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full sm:w-auto flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-[#C1440E] text-white hover:bg-[#A3370B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {src.last_status === "running" ? "En cours…" : "Lancer"}
                   </button>
@@ -708,7 +708,7 @@ export default function AdminPage() {
 
             {/* Embeddings */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
@@ -741,7 +741,7 @@ export default function AdminPage() {
                 <button
                   onClick={launchEmbeddings}
                   disabled={embedStatus?.status === "running"}
-                  className="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full sm:w-auto flex-shrink-0 px-4 py-2 text-sm font-medium rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {embedStatus?.status === "running" ? "En cours…" : "Générer"}
                 </button>
