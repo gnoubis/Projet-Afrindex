@@ -24,47 +24,46 @@ const CATEGORIES = [
   {
     num: "01",
     tag: "Santé",
-    title: "Mortalité,\nMaladies\n& Nutrition",
+    title: "Mortalité, Maladies & Nutrition",
     desc: "Données épidémiologiques, couverture vaccinale, mortalité maternelle et infantile.",
     query: "health",
   },
   {
     num: "02",
     tag: "Agriculture",
-    title: "Cultures,\nÉlevage\n& Sols",
+    title: "Cultures, Élevage & Sols",
     desc: "Production agricole, sécurité alimentaire, rendements et utilisation des terres.",
     query: "agriculture",
   },
   {
     num: "03",
     tag: "Finance",
-    title: "PIB,\nCommerce\n& Dettes",
+    title: "PIB, Commerce & Dettes",
     desc: "Indicateurs macroéconomiques, flux financiers et échanges commerciaux africains.",
     query: "finance",
   },
   {
     num: "04",
     tag: "Éducation",
-    title: "Scolarisation\n& Alphabétisation",
+    title: "Scolarisation & Alphabétisation",
     desc: "Taux d'inscription, accès à l'école et qualité de l'enseignement par pays.",
     query: "education",
   },
   {
     num: "05",
     tag: "Environnement",
-    title: "Forêts,\nEau\n& Climat",
+    title: "Forêts, Eau & Climat",
     desc: "Déforestation, ressources hydriques, qualité de l'air et émissions de CO₂.",
     query: "environment",
   },
   {
     num: "06",
     tag: "Humanitaire",
-    title: "Réfugiés,\nDéplacements\n& Crises",
+    title: "Réfugiés, Déplacements & Crises",
     desc: "Données UNHCR, flux de déplacés internes, aide humanitaire et accès aux services.",
     query: "humanitaire",
   },
 ];
-
 
 export default function HomePage() {
   const [query, setQuery]             = useState("");
@@ -88,16 +87,14 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* ───────────────────────── HERO ─────────────────────────
-          Centré, style moteur de recherche moderne
-      ──────────────────────────────────────────────────────── */}
-      <section className="bg-earth-50 flex flex-col items-center px-4 sm:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24">
+      {/* ─────────────────────── HERO ───────────────────────── */}
+      <section className="bg-earth-50 flex flex-col items-center px-4 sm:px-8 pt-24 sm:pt-36 pb-20 sm:pb-32">
 
-        {/* Logo + accroche */}
+        {/* Logo */}
         <div className="text-center mb-10 anim-1">
           <h1
             className="font-display text-terra-500 leading-none tracking-[0.08em] mb-3 select-none"
-            style={{ fontSize: "clamp(56px, 9vw, 88px)" }}
+            style={{ fontSize: "clamp(64px, 10vw, 104px)" }}
           >
             AFRINDEX
           </h1>
@@ -106,38 +103,33 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Barre de recherche */}
-        <form
-          onSubmit={handleSearch}
-          className="w-full max-w-4xl mb-5 anim-2"
-        >
+        {/* Barre de recherche — pill Google */}
+        <form onSubmit={handleSearch} className="w-full max-w-2xl mb-6 anim-2">
           <div
-            className="flex transition-shadow duration-200"
-            style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.09)" }}
+            className="flex items-center bg-white rounded-full border border-earth-200 pl-6 pr-2 py-2 hover:shadow-lg focus-within:shadow-lg focus-within:border-terra-300 transition-all"
+            style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
           >
-            <div className="flex-1 flex items-center gap-3 bg-white border border-r-0 border-earth-200 px-6 py-5 focus-within:border-terra-300 transition-colors">
-              <Search className="w-5 h-5 flex-shrink-0 text-earth-800/30" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher des données africaines…"
-                className="flex-1 bg-transparent text-ash-800 placeholder-earth-800/30 text-base search-input font-dm"
-                autoFocus
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="text-earth-800/30 hover:text-terra-500 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            <Search className="w-5 h-5 flex-shrink-0 text-earth-800/30 mr-3" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher des données africaines…"
+              className="flex-1 py-2 bg-transparent text-ash-800 placeholder-earth-800/30 text-base search-input font-dm"
+              autoFocus
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="mr-2 text-earth-800/30 hover:text-terra-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
             <button
               type="submit"
-              className="font-dm font-bold uppercase tracking-[0.22em] bg-terra-500 hover:bg-terra-600 text-white px-8 sm:px-10 transition-colors whitespace-nowrap border border-terra-500"
+              className="font-dm font-bold uppercase tracking-[0.18em] bg-terra-500 hover:bg-terra-600 text-white px-6 py-3 rounded-full transition-colors whitespace-nowrap flex-shrink-0"
               style={{ fontSize: "10px" }}
             >
               Rechercher
@@ -145,8 +137,8 @@ export default function HomePage() {
           </div>
         </form>
 
-        {/* Suggestions rapides */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-2xl anim-3">
+        {/* Suggestions rapides — pills */}
+        <div className="flex flex-wrap justify-center gap-2 max-w-xl anim-3">
           {suggestions.map((s) => (
             <button
               key={s}
@@ -159,14 +151,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─────────────────────────── STATS ──────────────────────── */}
+      {/* ───────────────────────── STATS ────────────────────── */}
       <StatsBar />
 
-      {/* ──────────────────────── CATÉGORIES ─────────────────────
-          Grille éditoriale — reste en dessous du fold
-      ──────────────────────────────────────────────────────── */}
+      {/* ─────────────────────── CATÉGORIES ──────────────────── */}
       <section className="bg-earth-100 py-16 sm:py-20">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+        <div className="max-w-5xl mx-auto px-6 sm:px-10">
 
           <div className="flex items-end justify-between gap-8 mb-10 flex-wrap">
             <div>
@@ -176,7 +166,7 @@ export default function HomePage() {
               </div>
               <h2
                 className="font-display leading-[0.88] m-0 select-none text-ash-800"
-                style={{ fontSize: "clamp(40px,5.5vw,76px)", letterSpacing: "3px" }}
+                style={{ fontSize: "clamp(40px,5.5vw,72px)", letterSpacing: "3px" }}
               >
                 DONNÉES<br />
                 <span style={{ WebkitTextStroke: "1.5px #E85D04", color: "transparent" }}>
@@ -188,36 +178,23 @@ export default function HomePage() {
               className="font-dm font-light leading-relaxed text-earth-800/50 pb-1"
               style={{ fontSize: "13px", maxWidth: "200px" }}
             >
-              9 domaines. Des milliers de datasets indexés depuis les meilleures sources africaines.
+              6 domaines. Des milliers de datasets indexés depuis les meilleures sources africaines.
             </p>
           </div>
 
-          <div>
+          {/* Grille de cartes arrondies */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.num}
                 onClick={() => router.push(`/search?q=${encodeURIComponent(cat.query)}`)}
-                className="cat-row"
+                className="cat-card"
               >
-                {/* Numéro */}
-                <span className="cat-row-num">{cat.num}</span>
-
-                {/* Séparateur */}
-                <span className="cat-row-divider" />
-
-                {/* Tag + Titre */}
-                <span className="cat-row-name">
-                  <span className="cat-row-tag">{cat.tag}</span>
-                  <span className="cat-row-title">
-                    {cat.title.replace(/\n/g, " ")}
-                  </span>
-                </span>
-
-                {/* Description — masquée sur mobile */}
-                <span className="cat-row-desc hidden sm:block">{cat.desc}</span>
-
-                {/* CTA */}
-                <span className="cat-row-cta">
+                <span className="cat-card-num">{cat.num}</span>
+                <span className="cat-card-tag">{cat.tag}</span>
+                <span className="cat-card-title">{cat.title}</span>
+                <span className="cat-card-desc">{cat.desc}</span>
+                <span className="cat-card-cta">
                   Explorer <span className="cat-cta-bar" />
                 </span>
               </button>
@@ -226,7 +203,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ──────────────────── DERNIERS DATASETS ──────────────────── */}
+      {/* ──────────────────── DERNIERS DATASETS ──────────────── */}
       <section className="max-w-5xl mx-auto px-6 sm:px-10 py-16 sm:py-20">
         <div className="section-label">
           <span className="section-label-line" />

@@ -46,7 +46,6 @@ function SearchContent() {
   }, [searchParams]);
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);
-
   const hasActiveFilters = Object.values(filters).some(f => f);
   const shouldSearch = query.trim() !== "" || hasActiveFilters;
 
@@ -71,12 +70,10 @@ function SearchContent() {
     queryFn: fetchRecentDatasets,
     staleTime: 60_000 * 10,
   });
+
   const dynamicSources = sourcesData?.map((s) => s.name) ?? [];
   const emptySuggestions = suggestionsData?.suggestions ?? [
-    "santé Afrique",
-    "agriculture Sénégal",
-    "éducation Nigeria",
-    "environnement Kenya",
+    "santé Afrique", "agriculture Sénégal", "éducation Nigeria", "environnement Kenya",
   ];
   const recentDatasets = recentData?.results?.slice(0, 4) ?? [];
 
@@ -87,12 +84,8 @@ function SearchContent() {
     setPage(1);
     const params = new URLSearchParams();
     if (trimmed) params.set("q", trimmed);
-    Object.entries(filters).forEach(([k, v]) => {
-      if (v) params.set(k, v);
-    });
-    startTransition(() => {
-      router.push(`/search?${params.toString()}`);
-    });
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    startTransition(() => { router.push(`/search?${params.toString()}`); });
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -101,12 +94,8 @@ function SearchContent() {
     setPage(1);
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    Object.entries(newFilters).forEach(([k, v]) => {
-      if (v) params.set(k, v);
-    });
-    startTransition(() => {
-      router.push(`/search?${params.toString()}`);
-    });
+    Object.entries(newFilters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    startTransition(() => { router.push(`/search?${params.toString()}`); });
   };
 
   const clearAllFilters = () => {
@@ -114,29 +103,21 @@ function SearchContent() {
     setQuery("");
     setInputValue("");
     setPage(1);
-    startTransition(() => {
-      router.push("/search");
-    });
+    startTransition(() => { router.push("/search"); });
   };
 
   const handleClearInput = () => {
     setInputValue("");
     setQuery("");
     setPage(1);
-    const hasActiveFilters = Object.values(filters).some(f => f);
-    if (!hasActiveFilters) {
-      startTransition(() => {
-        router.push("/search");
-      });
+    const hasActive = Object.values(filters).some(f => f);
+    if (!hasActive) {
+      startTransition(() => { router.push("/search"); });
       return;
     }
     const params = new URLSearchParams();
-    Object.entries(filters).forEach(([k, v]) => {
-      if (v) params.set(k, v);
-    });
-    startTransition(() => {
-      router.push(`/search?${params.toString()}`);
-    });
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    startTransition(() => { router.push(`/search?${params.toString()}`); });
   };
 
   const alternativeQueries: string[] = data?.alternative_queries ?? [];
@@ -144,9 +125,7 @@ function SearchContent() {
   const openSuggestedSearch = (suggestion: string) => {
     const params = new URLSearchParams();
     params.set("q", suggestion);
-    startTransition(() => {
-      router.push(`/search?${params.toString()}`);
-    });
+    startTransition(() => { router.push(`/search?${params.toString()}`); });
   };
 
   return (
@@ -156,11 +135,11 @@ function SearchContent() {
         <ChevronLeft className="w-4 h-4" /> Retour à l'accueil
       </a>
 
-      {/* Barre de recherche */}
-      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 mb-6">
+      {/* Barre de recherche — pill style */}
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
         <div
-          className="flex-1 flex items-center bg-white border border-earth-200 px-5 py-3.5 hover:border-terra-300 focus-within:border-terra-400 transition-colors"
-          style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}
+          className="flex-1 flex items-center bg-white rounded-full border border-earth-200 pl-5 pr-2 py-2 hover:shadow-md focus-within:shadow-md focus-within:border-terra-300 transition-all"
+          style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.07)" }}
         >
           <Search className="w-4 h-4 text-earth-800/30 flex-shrink-0 mr-3" />
           <input
@@ -168,47 +147,49 @@ function SearchContent() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Rechercher des datasets africains…"
-            className="flex-1 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none font-dm search-input"
+            className="flex-1 py-1.5 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none font-dm search-input"
           />
           {inputValue && (
-            <button type="button" onClick={handleClearInput} className="ml-2 text-earth-800/30 hover:text-terra-500 transition-colors">
+            <button type="button" onClick={handleClearInput} className="mr-2 text-earth-800/30 hover:text-terra-500 transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
+          <button
+            type="submit"
+            className="font-dm font-bold uppercase tracking-[0.18em] bg-terra-500 hover:bg-terra-600 text-white px-5 py-2 rounded-full transition-colors whitespace-nowrap flex-shrink-0"
+            style={{ fontSize: "10px" }}
+          >
+            Rechercher
+          </button>
         </div>
-        <button
-          type="submit"
-          className="font-dm font-bold uppercase tracking-[0.22em] bg-terra-500 hover:bg-terra-600 text-white px-8 py-3.5 transition-colors whitespace-nowrap border border-terra-500 w-full sm:w-auto"
-          style={{ fontSize: "10px" }}
-        >
-          Rechercher
-        </button>
+
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex w-full sm:w-auto justify-center items-center gap-2 border px-5 py-3.5 text-sm font-dm font-medium transition-colors ${
+          className={`flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-3 rounded-full border font-dm text-sm font-medium transition-all ${
             showFilters || activeFilters.length > 0
-              ? "bg-terra-50 border-terra-300 text-terra-600"
-              : "bg-white border-earth-200 text-earth-800/60 hover:border-terra-300"
+              ? "bg-terra-50 border-terra-300 text-terra-600 shadow-sm"
+              : "bg-white border-earth-200 text-earth-800/60 hover:border-terra-300 hover:text-terra-500"
           }`}
+          style={{ boxShadow: showFilters || activeFilters.length > 0 ? undefined : "0 1px 6px rgba(0,0,0,0.06)" }}
         >
           <SlidersHorizontal className="w-4 h-4" />
           <span className="hidden sm:inline">Filtres</span>
           {activeFilters.length > 0 && (
-            <span className="bg-terra-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center">
+            <span className="bg-terra-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
               {activeFilters.length}
             </span>
           )}
         </button>
       </form>
 
-      {/* Filtres actifs (chips) */}
+      {/* Chips filtres actifs */}
       {activeFilters.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4 items-center">
           {activeFilters.map(([key, value]) => (
             <span
               key={key}
-              className="inline-flex items-center gap-1.5 text-xs font-dm font-medium bg-terra-50 text-terra-600 border border-terra-200 px-3 py-1"
+              className="inline-flex items-center gap-1.5 text-xs font-dm font-medium bg-terra-50 text-terra-600 border border-terra-200 px-3 py-1.5 rounded-full"
             >
               {value}
               <button onClick={() => handleFilterChange(key, "")}>
@@ -216,47 +197,38 @@ function SearchContent() {
               </button>
             </span>
           ))}
-          <button
-            onClick={clearAllFilters}
-            className="text-xs font-dm text-earth-800/50 hover:text-red-500 transition-colors underline"
-          >
+          <button onClick={clearAllFilters} className="text-xs font-dm text-earth-800/50 hover:text-red-500 transition-colors underline">
             Effacer tous les filtres
           </button>
         </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Filtres latéraux */}
         {showFilters && (
           <aside className="w-full lg:w-64 lg:flex-shrink-0">
             <FilterPanel filters={filters} onChange={handleFilterChange} dynamicSources={dynamicSources} />
           </aside>
         )}
 
-        {/* Résultats */}
         <div className="flex-1 min-w-0">
+
+          {/* État vide */}
           {!shouldSearch && (
-            <div className="space-y-6">
-              <div className="text-center py-12 border border-dashed border-earth-200 bg-earth-50">
+            <div className="space-y-5">
+              <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-earth-50">
                 <Search className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
                 <p className="font-dm text-earth-800/60 font-medium">Explorez des sujets populaires.</p>
                 <p className="font-dm text-earth-800/40 text-sm mt-1">Choisissez une suggestion ou découvrez les derniers datasets ajoutés.</p>
               </div>
 
-              <div className="bg-white border border-earth-200 p-5">
+              <div className="bg-white rounded-2xl border border-earth-200 p-5 shadow-sm">
                 <div className="section-label mb-4">
                   <span className="section-label-line" />
                   <span className="section-label-text">Recherches suggérées</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {emptySuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => openSuggestedSearch(suggestion)}
-                      className="suggestion-tag"
-                    >
-                      {suggestion}
-                    </button>
+                  {emptySuggestions.map((s) => (
+                    <button key={s} onClick={() => openSuggestedSearch(s)} className="suggestion-tag">{s}</button>
                   ))}
                 </div>
               </div>
@@ -268,35 +240,36 @@ function SearchContent() {
                     <span className="section-label-text">Datasets récents à découvrir</span>
                   </div>
                   <div className="grid gap-3">
-                    {recentDatasets.map((dataset: any) => (
-                      <DatasetCard key={dataset.id} dataset={dataset} />
-                    ))}
+                    {recentDatasets.map((d: any) => <DatasetCard key={d.id} dataset={d} />)}
                   </div>
                 </div>
               )}
             </div>
           )}
 
+          {/* Skeletons */}
           {shouldSearch && isLoading && (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white border border-earth-200 p-5 animate-pulse">
-                  <div className="h-4 bg-earth-100 rounded w-2/3 mb-3" />
-                  <div className="h-3 bg-earth-100 rounded w-full mb-1.5" />
-                  <div className="h-3 bg-earth-100 rounded w-4/5" />
+                <div key={i} className="bg-white rounded-2xl border border-earth-200 p-5 animate-pulse">
+                  <div className="h-4 bg-earth-100 rounded-full w-2/3 mb-3" />
+                  <div className="h-3 bg-earth-100 rounded-full w-full mb-1.5" />
+                  <div className="h-3 bg-earth-100 rounded-full w-4/5" />
                 </div>
               ))}
             </div>
           )}
 
+          {/* Erreur */}
           {shouldSearch && isError && (
-            <div className="text-center py-16 border border-red-100 bg-red-50">
+            <div className="text-center py-16 rounded-2xl border border-red-100 bg-red-50">
               <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" strokeWidth={1.5} />
               <p className="font-dm text-red-600 font-medium">Erreur de connexion à l'API.</p>
               <p className="font-dm text-red-400 text-sm mt-1">Vérifiez que le backend est démarré.</p>
             </div>
           )}
 
+          {/* Résultats */}
           {shouldSearch && data && !isLoading && (
             <>
               <p className="font-dm text-sm text-earth-800/50 mb-4">
@@ -306,7 +279,7 @@ function SearchContent() {
               </p>
 
               {data.message && (
-                <div className="bg-yellow-50 border border-yellow-200 p-4 mb-6 flex gap-3">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-5 flex gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
                     <p className="font-dm text-sm text-yellow-700 font-medium">{data.message}</p>
@@ -316,48 +289,36 @@ function SearchContent() {
               )}
 
               {data.message && alternativeQueries.length > 0 && (
-                <div className="bg-white border border-earth-200 p-4 sm:p-5 mb-6">
+                <div className="bg-white rounded-2xl border border-earth-200 p-4 sm:p-5 mb-5 shadow-sm">
                   <div className="section-label mb-3">
                     <span className="section-label-line" />
                     <span className="section-label-text">Reformuler la recherche</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {alternativeQueries.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => openSuggestedSearch(suggestion)}
-                        className="suggestion-tag"
-                      >
-                        {suggestion}
-                      </button>
+                    {alternativeQueries.map((s) => (
+                      <button key={s} onClick={() => openSuggestedSearch(s)} className="suggestion-tag">{s}</button>
                     ))}
                   </div>
                 </div>
               )}
 
               {data.results.length === 0 ? (
-                <div className="space-y-6">
-                  <div className="text-center py-12 border border-dashed border-earth-200 bg-white">
+                <div className="space-y-5">
+                  <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-white">
                     <SearchX className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
                     <p className="font-dm text-earth-800/60 font-medium">Aucun dataset trouvé.</p>
                     <p className="font-dm text-earth-800/40 text-sm mt-1">On n'a rien trouvé pour cette requête exacte, mais voici d'autres pistes utiles.</p>
                   </div>
 
                   {alternativeQueries.length > 0 && (
-                    <div className="bg-white border border-earth-200 p-4 sm:p-5">
+                    <div className="bg-white rounded-2xl border border-earth-200 p-4 sm:p-5 shadow-sm">
                       <div className="section-label mb-3">
                         <span className="section-label-line" />
                         <span className="section-label-text">Essayez aussi</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {alternativeQueries.map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            onClick={() => openSuggestedSearch(suggestion)}
-                            className="suggestion-tag"
-                          >
-                            {suggestion}
-                          </button>
+                        {alternativeQueries.map((s) => (
+                          <button key={s} onClick={() => openSuggestedSearch(s)} className="suggestion-tag">{s}</button>
                         ))}
                       </div>
                     </div>
@@ -370,13 +331,8 @@ function SearchContent() {
                         <span className="section-label-text">Datasets suggérés</span>
                       </div>
                       <div className="grid gap-3">
-                        {alternativeDatasets.map((dataset: any) => (
-                          <DatasetCard
-                            key={dataset.id}
-                            dataset={dataset}
-                            currentQuery={query}
-                            currentFilters={filters}
-                          />
+                        {alternativeDatasets.map((d: any) => (
+                          <DatasetCard key={d.id} dataset={d} currentQuery={query} currentFilters={filters} />
                         ))}
                       </div>
                     </div>
@@ -384,45 +340,27 @@ function SearchContent() {
                 </div>
               ) : (
                 <>
-                  {/* Légende des badges */}
-                  <div className="mb-6 p-4 bg-white border border-earth-200">
+                  {/* Légende badges */}
+                  <div className="mb-5 p-4 bg-white rounded-2xl border border-earth-200 shadow-sm">
                     <p className="font-dm text-xs font-bold uppercase tracking-[0.2em] text-earth-800/40 mb-3">Comprendre les badges</p>
-                    <div className="flex flex-wrap gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 border border-blue-100">
-                          HDX
-                        </span>
-                        <span className="font-dm text-xs text-earth-700">Source</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20">
-                          Mali
-                        </span>
-                        <span className="font-dm text-xs text-earth-700">Pays</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-terra-50 text-terra-600 px-2.5 py-0.5 border border-terra-100">
-                          Santé
-                        </span>
-                        <span className="font-dm text-xs text-earth-700">Domaine</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20">
-                          CSV
-                        </span>
-                        <span className="font-dm text-xs text-earth-700">Format</span>
-                      </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                      {[
+                        { cls: "bg-blue-50 text-blue-600 border-blue-100", label: "HDX", desc: "Source" },
+                        { cls: "bg-savane-400/10 text-savane-600 border-savane-400/20", label: "Mali", desc: "Pays" },
+                        { cls: "bg-terra-50 text-terra-600 border-terra-100", label: "Santé", desc: "Domaine" },
+                        { cls: "bg-savane-400/10 text-savane-600 border-savane-400/20", label: "CSV", desc: "Format" },
+                      ].map(({ cls, label, desc }) => (
+                        <div key={label} className="flex items-center gap-2">
+                          <span className={`inline-flex items-center text-[11px] font-dm font-semibold px-2.5 py-0.5 rounded-full border ${cls}`}>{label}</span>
+                          <span className="font-dm text-xs text-earth-700">{desc}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
                   <div className="grid gap-3">
-                    {data.results.map((dataset: any) => (
-                      <DatasetCard
-                        key={dataset.id}
-                        dataset={dataset}
-                        currentQuery={query}
-                        currentFilters={filters}
-                      />
+                    {data.results.map((d: any) => (
+                      <DatasetCard key={d.id} dataset={d} currentQuery={query} currentFilters={filters} />
                     ))}
                   </div>
 
@@ -432,7 +370,7 @@ function SearchContent() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                       >
                         <ChevronLeft className="w-4 h-4" /> Précédent
                       </button>
@@ -452,14 +390,14 @@ function SearchContent() {
                           }
                           return pages.map((p, i) =>
                             p === "..." ? (
-                              <span key={`ellipsis-${i}`} className="px-1 text-earth-800/30 font-dm text-sm">…</span>
+                              <span key={`e-${i}`} className="px-1 text-earth-800/30 font-dm text-sm">…</span>
                             ) : (
                               <button
                                 key={p}
                                 onClick={() => setPage(p as number)}
-                                className={`w-8 h-8 font-dm text-sm font-medium transition-colors ${
+                                className={`w-9 h-9 rounded-full font-dm text-sm font-medium transition-all ${
                                   page === p
-                                    ? "bg-terra-500 text-white"
+                                    ? "bg-terra-500 text-white shadow-sm"
                                     : "text-earth-800/60 hover:bg-earth-100 border border-earth-200"
                                 }`}
                               >
@@ -473,7 +411,7 @@ function SearchContent() {
                       <button
                         onClick={() => setPage((p) => Math.min(Math.ceil(data.total / PAGE_SIZE), p + 1))}
                         disabled={page >= Math.ceil(data.total / PAGE_SIZE)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                       >
                         Suivant <ChevronRight className="w-4 h-4" />
                       </button>

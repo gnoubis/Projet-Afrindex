@@ -56,13 +56,13 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
   return (
     <section id="reviews" className="mt-6 space-y-4 scroll-mt-24">
       {/* CTA banner */}
-      <div className="bg-terra-500 p-5 text-white">
+      <div className="bg-terra-500 rounded-2xl p-5 text-white shadow-md">
         <p className="font-dm font-bold text-base leading-snug">Ce dataset vous a été utile ?</p>
         <p className="font-dm text-terra-100 text-sm mt-0.5">Votre avis est visible juste ici et aide les autres utilisateurs à choisir plus vite.</p>
       </div>
 
       {/* Formulaire d'avis */}
-      <div className="bg-white border-2 border-terra-200 p-6">
+      <div className="bg-white rounded-2xl border border-terra-200 shadow-sm p-6">
         <div className="flex items-center justify-between gap-3 mb-4">
           <h3 className="font-dm font-bold text-ink flex items-center gap-2">
             <MessageSquarePlus className="w-5 h-5 text-terra-500" strokeWidth={1.75} />
@@ -77,7 +77,7 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
         </div>
 
         {sent ? (
-          <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-200 px-4 py-3">
+          <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
             <div>
               <p className="font-dm text-sm font-semibold">Merci pour votre avis !</p>
@@ -119,7 +119,7 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
                   placeholder="Anonyme"
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
-                  className="font-dm w-full px-4 py-2.5 border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
+                  className="font-dm w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -129,7 +129,7 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
                   placeholder="Qualité, utilité, accessibilité…"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className="font-dm w-full px-4 py-2.5 border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
+                  className="font-dm w-full px-4 py-2.5 rounded-xl border border-earth-200 text-sm bg-earth-50 focus:outline-none focus:ring-2 focus:ring-terra-200 focus:border-terra-400 transition-all"
                 />
               </div>
             </div>
@@ -137,7 +137,7 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
             <button
               type="submit"
               disabled={!rating || loading}
-              className="font-dm inline-flex items-center gap-2 px-6 py-2.5 bg-terra-500 text-white text-sm font-bold hover:bg-terra-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="font-dm inline-flex items-center gap-2 px-6 py-2.5 bg-terra-500 text-white text-sm font-bold rounded-full hover:bg-terra-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             >
               <CheckCircle className="w-4 h-4" />
               {loading ? "Envoi…" : "Publier mon avis"}
@@ -147,7 +147,7 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
       </div>
 
       {/* Avis existants */}
-      <div className="bg-white border border-earth-200 p-5">
+      <div className="bg-white rounded-2xl border border-earth-200 shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-dm font-bold text-ink flex items-center gap-2">
             <Users className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
@@ -168,19 +168,19 @@ function ReviewSection({ datasetId, datasetTitle }: { datasetId: string; dataset
         {loadingReviews ? (
           <div className="space-y-3">
             {[...Array(2)].map((_, i) => (
-              <div key={i} className="border border-earth-100 p-4 animate-pulse">
-                <div className="h-3 bg-earth-100 rounded w-1/4 mb-2" />
-                <div className="h-3 bg-earth-100 rounded w-full" />
+              <div key={i} className="rounded-xl border border-earth-100 p-4 animate-pulse">
+                <div className="h-3 bg-earth-100 rounded-full w-1/4 mb-2" />
+                <div className="h-3 bg-earth-100 rounded-full w-full" />
               </div>
             ))}
           </div>
         ) : reviews.length > 0 ? (
           <div className="space-y-3">
             {reviews.map((r) => (
-              <div key={r.id} className="border border-earth-100 bg-earth-50/50 p-4">
+              <div key={r.id} className="rounded-xl border border-earth-100 bg-earth-50/50 p-4">
                 <div className="flex items-center justify-between gap-3 mb-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-terra-100 text-terra-600 flex items-center justify-center text-xs font-bold uppercase flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-terra-100 text-terra-600 flex items-center justify-center text-xs font-bold uppercase flex-shrink-0">
                       {r.author?.[0] ?? "A"}
                     </div>
                     <span className="font-dm text-sm font-semibold text-ink">{r.author}</span>
@@ -221,9 +221,9 @@ export default function DatasetPage() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-earth-100 rounded w-1/2" />
-          <div className="h-4 bg-earth-100 rounded w-full" />
-          <div className="h-4 bg-earth-100 rounded w-5/6" />
+          <div className="h-6 bg-earth-100 rounded-full w-1/2" />
+          <div className="h-4 bg-earth-100 rounded-full w-full" />
+          <div className="h-4 bg-earth-100 rounded-full w-5/6" />
         </div>
       </div>
     );
@@ -251,8 +251,7 @@ export default function DatasetPage() {
       </Link>
 
       {/* Carte principale */}
-      <div className="bg-white border border-earth-200 p-5 sm:p-8 mb-6" style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}>
-        {/* En-tête */}
+      <div className="bg-white rounded-2xl border border-earth-200 p-5 sm:p-8 mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6 mb-5">
           <h1 className="font-dm text-xl sm:text-2xl font-bold text-ink leading-snug">
             {data.title}
@@ -262,51 +261,48 @@ export default function DatasetPage() {
               href={data.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-dm w-full sm:w-auto justify-center flex-shrink-0 flex items-center gap-2 bg-terra-500 text-white text-sm font-semibold px-5 py-2.5 hover:bg-terra-600 transition-colors"
+              className="font-dm w-full sm:w-auto justify-center flex-shrink-0 flex items-center gap-2 bg-terra-500 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-md"
             >
               Accéder <ExternalLink className="w-4 h-4" />
             </a>
           )}
         </div>
 
-        {/* Métadonnées */}
+        {/* Badges métadonnées */}
         <div className="flex flex-wrap gap-2 mb-6">
           {data.source && (
-            <span className="inline-flex items-center text-xs font-dm font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1">
+            <span className="inline-flex items-center text-xs font-dm font-semibold bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded-full">
               {data.source}
             </span>
           )}
           {data.country && (
-            <span className="inline-flex items-center gap-1 text-xs font-dm font-semibold bg-savane-400/10 text-savane-600 border border-savane-400/20 px-2.5 py-1">
+            <span className="inline-flex items-center gap-1 text-xs font-dm font-semibold bg-savane-400/10 text-savane-600 border border-savane-400/20 px-3 py-1 rounded-full">
               <MapPin className="w-3 h-3" /> {data.country}
             </span>
           )}
           {data.category && (
-            <span className="inline-flex items-center text-xs font-dm font-semibold bg-terra-50 text-terra-600 border border-terra-100 px-2.5 py-1">
+            <span className="inline-flex items-center text-xs font-dm font-semibold bg-terra-50 text-terra-600 border border-terra-100 px-3 py-1 rounded-full">
               {data.category}
             </span>
           )}
           {data.format && (
-            <span className="inline-flex items-center text-xs font-dm font-semibold bg-earth-100 text-earth-800/60 px-2.5 py-1">
+            <span className="inline-flex items-center text-xs font-dm font-semibold bg-earth-100 text-earth-800/60 px-3 py-1 rounded-full">
               {data.format}
             </span>
           )}
           {data.last_updated && (
-            <span className="inline-flex items-center gap-1 text-xs font-dm text-earth-800/40 px-2.5 py-1 bg-earth-100">
+            <span className="inline-flex items-center gap-1 text-xs font-dm text-earth-800/40 px-3 py-1 rounded-full bg-earth-100">
               <Calendar className="w-3 h-3" /> {new Date(data.last_updated).toLocaleDateString("fr-FR")}
             </span>
           )}
         </div>
 
-        {/* Description */}
         {data.description && (
           <p className="font-dm text-sm sm:text-[15px] text-earth-800/70 leading-relaxed mb-6">{data.description}</p>
         )}
 
-        {/* Divider */}
         {data.tags?.length > 0 && <hr className="border-earth-100 mb-4" />}
 
-        {/* Tags */}
         {data.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             <span className="font-dm text-xs text-earth-800/40 font-medium self-center">Tags :</span>
@@ -314,7 +310,7 @@ export default function DatasetPage() {
               <Link
                 key={tag}
                 href={`/search?q=${encodeURIComponent(tag)}`}
-                className="inline-flex items-center gap-1 text-xs font-dm bg-earth-100 text-earth-800/60 px-2.5 py-1 hover:bg-terra-50 hover:text-terra-600 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-dm bg-earth-100 text-earth-800/60 px-3 py-1 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors"
               >
                 <Tag className="w-2.5 h-2.5" /> {tag}
               </Link>

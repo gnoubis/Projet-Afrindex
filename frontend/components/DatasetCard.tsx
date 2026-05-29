@@ -47,9 +47,9 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
       : "";
 
   return (
-    <div className="group relative bg-white border border-earth-200 overflow-hidden hover:border-ash-200 hover:shadow-card-hover transition-all duration-200">
+    <div className="group relative bg-white border border-earth-200 rounded-2xl overflow-hidden hover:border-terra-200 hover:shadow-lg transition-all duration-200">
       {/* Barre ambrée gauche au hover */}
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-terra-500 origin-bottom scale-y-0 group-hover:scale-y-100 transition-transform duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" />
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-terra-500 origin-bottom scale-y-0 group-hover:scale-y-100 transition-transform duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] rounded-l-2xl" />
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
@@ -85,7 +85,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
           {dataset.source && (
             <Link
               href={buildBadgeUrl("source", dataset.source)}
-              className="inline-flex items-center text-[11px] font-dm font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 border border-blue-100 hover:bg-blue-100 transition-colors"
+              className="inline-flex items-center text-[11px] font-dm font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100 hover:bg-blue-100 transition-colors"
             >
               {dataset.source}
             </Link>
@@ -93,7 +93,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
           {dataset.country && (
             <Link
               href={buildBadgeUrl("country", dataset.country)}
-              className="inline-flex items-center gap-1 text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20 hover:bg-savane-400/20 transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20 hover:bg-savane-400/20 transition-colors"
             >
               <MapPin className="w-2.5 h-2.5" /> {dataset.country}
             </Link>
@@ -101,7 +101,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
           {dataset.category && (
             <Link
               href={buildBadgeUrl("category", dataset.category)}
-              className="inline-flex items-center text-[11px] font-dm font-semibold bg-terra-50 text-terra-600 px-2.5 py-0.5 border border-terra-100 hover:bg-terra-100 transition-colors"
+              className="inline-flex items-center text-[11px] font-dm font-semibold bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100 hover:bg-terra-100 transition-colors"
             >
               {dataset.category}
             </Link>
@@ -109,7 +109,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
           {dataset.format && (
             <Link
               href={buildBadgeUrl("format", dataset.format)}
-              className={`inline-flex items-center text-[11px] font-dm font-semibold px-2.5 py-0.5 border hover:opacity-75 transition-opacity ${fmtColor}`}
+              className={`inline-flex items-center text-[11px] font-dm font-semibold px-2.5 py-0.5 rounded-full border hover:opacity-75 transition-opacity ${fmtColor}`}
             >
               {dataset.format}
             </Link>
@@ -118,7 +118,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
             <Link
               key={tag}
               href={buildBadgeUrl("q", tag)}
-              className="inline-flex items-center gap-0.5 text-[11px] font-dm text-earth-800/50 bg-earth-100 px-2.5 py-0.5 hover:bg-terra-50 hover:text-terra-600 transition-colors"
+              className="inline-flex items-center gap-0.5 text-[11px] font-dm text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors"
             >
               <Tag className="w-2.5 h-2.5" /> {tag}
             </Link>
