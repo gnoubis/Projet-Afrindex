@@ -2,27 +2,37 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchStats } from "@/lib/api";
-import { Database, Globe2, LayoutGrid } from "lucide-react";
 
-const STAT_CONFIG = [
-  { key: "total_datasets", label: "datasets indexés", icon: Database, color: "text-terra-500" },
-  { key: "total_sources",  label: "sources de données", icon: LayoutGrid, color: "text-savane-500" },
-  { key: "total_countries", label: "pays couverts", icon: Globe2, color: "text-gold-500" },
+const STATS = [
+  { key: "total_datasets",  label: "datasets indexés"   },
+  { key: "total_sources",   label: "sources de données" },
+  { key: "total_countries", label: "pays couverts"      },
 ] as const;
 
 export default function StatsBar() {
   const { data } = useQuery({ queryKey: ["stats"], queryFn: fetchStats });
 
   return (
-    <div className="border-y border-earth-200 bg-white/60 backdrop-blur-sm">
-      <div className="max-w-3xl mx-auto px-6 py-6 grid grid-cols-3 divide-x divide-earth-200">
-        {STAT_CONFIG.map(({ key, label, icon: Icon, color }) => (
-          <div key={key} className="flex flex-col items-center gap-1 px-4">
-            <Icon className={`w-4 h-4 ${color} mb-1`} />
-            <span className={`text-2xl font-display font-bold ${color}`} style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+    <div className="border-y border-earth-200 bg-white">
+      <div className="max-w-3xl mx-auto px-6 py-8 grid grid-cols-3">
+        {STATS.map(({ key, label }, i) => (
+          <div
+            key={key}
+            className="flex flex-col items-center gap-1.5 px-4"
+            style={{ borderLeft: i > 0 ? "1px solid #E5DDD3" : "none" }}
+          >
+            <span
+              className="font-display text-terra-500 leading-none"
+              style={{ fontSize: "clamp(32px,5vw,56px)", letterSpacing: "2px" }}
+            >
               {data?.[key]?.toLocaleString("fr-FR") ?? "—"}
             </span>
-            <span className="text-xs text-earth-800/50 font-medium">{label}</span>
+            <span
+              className="font-dm font-semibold uppercase text-center text-earth-800/45"
+              style={{ fontSize: "9px", letterSpacing: "0.22em" }}
+            >
+              {label}
+            </span>
           </div>
         ))}
       </div>

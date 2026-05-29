@@ -3,29 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Search, Sparkles, X, Globe2,
-  Activity, Sprout, TrendingUp, GraduationCap,
-  Leaf, Users, Zap, Landmark, HeartHandshake,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Search, X } from "lucide-react";
 import StatsBar from "@/components/StatsBar";
 import RecentDatasets from "@/components/RecentDatasets";
-import { searchDatasets } from "@/lib/api";
 
-const POPULAR_CATEGORIES: { label: string; query: string; Icon: LucideIcon; color: string }[] = [
-  { label: "Santé",         query: "health",       Icon: Activity,       color: "bg-red-50   text-red-600   border-red-100" },
-  { label: "Agriculture",   query: "agriculture",  Icon: Sprout,         color: "bg-savane-400/10 text-savane-600 border-savane-400/20" },
-  { label: "Finance",       query: "finance",      Icon: TrendingUp,     color: "bg-gold-300/20 text-yellow-700 border-gold-300/30" },
-  { label: "Éducation",     query: "education",    Icon: GraduationCap,  color: "bg-blue-50  text-blue-600   border-blue-100" },
-  { label: "Environnement", query: "environment",  Icon: Leaf,           color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-  { label: "Démographie",   query: "population",   Icon: Users,          color: "bg-purple-50 text-purple-600 border-purple-100" },
-  { label: "Énergie",       query: "energy",       Icon: Zap,            color: "bg-gold-300/20 text-amber-700 border-amber-200" },
-  { label: "Gouvernance",   query: "governance",   Icon: Landmark,       color: "bg-terra-50  text-terra-600  border-terra-100" },
-  { label: "Humanitaire",   query: "humanitaire",  Icon: HeartHandshake, color: "bg-orange-50 text-orange-600 border-orange-100" },
-];
-
-// Fallback suggestions en cas de problème
 const FALLBACK_SUGGESTIONS = [
   "mortalité infantile Cameroun",
   "production agricole Sénégal",
@@ -34,91 +15,143 @@ const FALLBACK_SUGGESTIONS = [
 ];
 
 async function fetchSuggestions() {
-  const response = await fetch("/api/v1/suggestions");
-  if (!response.ok) return { suggestions: FALLBACK_SUGGESTIONS };
-  return response.json();
+  const res = await fetch("/api/v1/suggestions");
+  if (!res.ok) return { suggestions: FALLBACK_SUGGESTIONS };
+  return res.json();
 }
 
+const CATEGORIES = [
+  {
+    num: "01",
+    tag: "Santé",
+    title: "Mortalité,\nMaladies\n& Nutrition",
+    desc: "Données épidémiologiques, couverture vaccinale, mortalité maternelle et infantile.",
+    query: "health",
+  },
+  {
+    num: "02",
+    tag: "Agriculture",
+    title: "Cultures,\nÉlevage\n& Sols",
+    desc: "Production agricole, sécurité alimentaire, rendements et utilisation des terres.",
+    query: "agriculture",
+  },
+  {
+    num: "03",
+    tag: "Finance",
+    title: "PIB,\nCommerce\n& Dettes",
+    desc: "Indicateurs macroéconomiques, flux financiers et échanges commerciaux africains.",
+    query: "finance",
+  },
+  {
+    num: "04",
+    tag: "Éducation",
+    title: "Scolarisation\n& Alphabétisation",
+    desc: "Taux d'inscription, accès à l'école et qualité de l'enseignement par pays.",
+    query: "education",
+  },
+  {
+    num: "05",
+    tag: "Environnement",
+    title: "Forêts,\nEau\n& Climat",
+    desc: "Déforestation, ressources hydriques, qualité de l'air et émissions de CO₂.",
+    query: "environment",
+  },
+  {
+    num: "06",
+    tag: "Humanitaire",
+    title: "Réfugiés,\nDéplacements\n& Crises",
+    desc: "Données UNHCR, flux de déplacés internes, aide humanitaire et accès aux services.",
+    query: "humanitaire",
+  },
+];
+
+
 export default function HomePage() {
-  const [query, setQuery] = useState("");
-  const router = useRouter();
+  const [query, setQuery]             = useState("");
+  const router                        = useRouter();
   const [suggestions, setSuggestions] = useState(FALLBACK_SUGGESTIONS);
 
-  // Charge les vraies suggestions depuis l'API
   const { data: suggestionsData } = useQuery({
     queryKey: ["suggestions"],
     queryFn: fetchSuggestions,
-    staleTime: 60_000 * 60, // 1 heure
+    staleTime: 60_000 * 60,
   });
 
   useEffect(() => {
-    if (suggestionsData?.suggestions) {
-      setSuggestions(suggestionsData.suggestions);
-    }
+    if (suggestionsData?.suggestions) setSuggestions(suggestionsData.suggestions);
   }, [suggestionsData]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-    }
+    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
     <div>
-      {/* ── HERO : style Google centré ── */}
-      <section className="pt-12 sm:pt-20 pb-10 sm:pb-12 px-4 text-center">
-        {/* Logo géant */}
-        <div className="mb-6 inline-flex flex-col items-center">
-          <Globe2 className="w-12 h-12 sm:w-16 sm:h-16 mb-3 text-terra-500" strokeWidth={1.5} />
+      {/* ───────────────────────── HERO ─────────────────────────
+          Centré, style moteur de recherche moderne
+      ──────────────────────────────────────────────────────── */}
+      <section className="bg-earth-50 flex flex-col items-center px-4 sm:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24">
+
+        {/* Logo + accroche */}
+        <div className="text-center mb-10 anim-1">
           <h1
-            className="text-4xl sm:text-5xl font-display font-extrabold tracking-tight gradient-text"
-            style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
+            className="font-display text-terra-500 leading-none tracking-[0.08em] mb-3 select-none"
+            style={{ fontSize: "clamp(56px, 9vw, 88px)" }}
           >
-            Afrindex
+            AFRINDEX
           </h1>
-          <p className="mt-2 text-earth-800/60 text-sm sm:text-base font-medium px-2">
+          <p className="font-dm text-earth-800/50 text-sm sm:text-base tracking-wide">
             Le moteur de recherche de datasets africains
           </p>
         </div>
 
-        {/* Barre de recherche principale */}
-        <form onSubmit={handleSearch} className="max-w-2xl mx-auto mt-8">
-          <div className="relative flex flex-wrap sm:flex-nowrap items-center gap-3 bg-white border-2 border-earth-200 rounded-[2rem] px-4 sm:px-5 py-3.5 shadow-card hover:shadow-card-hover hover:border-terra-300 transition-all group">
-            <Search className="w-5 h-5 text-earth-200 group-hover:text-terra-400 transition-colors flex-shrink-0" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher des données africaines…"
-              className="search-input min-w-0 flex-1 bg-transparent text-ink placeholder-earth-200 text-sm sm:text-base outline-none"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="text-earth-200 hover:text-terra-400 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+        {/* Barre de recherche */}
+        <form
+          onSubmit={handleSearch}
+          className="w-full max-w-4xl mb-5 anim-2"
+        >
+          <div
+            className="flex transition-shadow duration-200"
+            style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.09)" }}
+          >
+            <div className="flex-1 flex items-center gap-3 bg-white border border-r-0 border-earth-200 px-6 py-5 focus-within:border-terra-300 transition-colors">
+              <Search className="w-5 h-5 flex-shrink-0 text-earth-800/30" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher des données africaines…"
+                className="flex-1 bg-transparent text-ash-800 placeholder-earth-800/30 text-base search-input font-dm"
+                autoFocus
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="text-earth-800/30 hover:text-terra-500 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <button
               type="submit"
-              className="flex w-full sm:w-auto justify-center items-center gap-2 bg-terra-500 hover:bg-terra-600 text-white text-sm font-semibold px-5 py-2 rounded-full transition-all shadow-sm hover:shadow-search"
+              className="font-dm font-bold uppercase tracking-[0.22em] bg-terra-500 hover:bg-terra-600 text-white px-8 sm:px-10 transition-colors whitespace-nowrap border border-terra-500"
+              style={{ fontSize: "10px" }}
             >
-              <Sparkles className="w-3.5 h-3.5" />
               Rechercher
             </button>
           </div>
         </form>
 
         {/* Suggestions rapides */}
-        <div className="flex flex-wrap justify-center gap-2 mt-4">
+        <div className="flex flex-wrap justify-center gap-2 max-w-2xl anim-3">
           {suggestions.map((s) => (
             <button
               key={s}
               onClick={() => router.push(`/search?q=${encodeURIComponent(s)}`)}
-              className="text-xs px-3 py-1.5 rounded-full bg-white border border-earth-200 text-earth-800/70 hover:border-terra-300 hover:text-terra-600 hover:bg-terra-50 transition-all"
+              className="suggestion-tag"
             >
               {s}
             </button>
@@ -126,34 +159,87 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* ─────────────────────────── STATS ──────────────────────── */}
       <StatsBar />
 
-      {/* Catégories populaires */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <h2 className="text-xl font-display font-bold text-ink mb-5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-          Catégories populaires
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {POPULAR_CATEGORIES.map((cat) => (
-            <button
-              key={cat.label}
-              onClick={() => router.push(`/search?q=${encodeURIComponent(cat.query)}`)}
-              className={`flex flex-col items-center gap-2 border rounded-2xl p-4 text-center hover:shadow-card-hover transition-all group ${
-                cat.color
-              } hover:scale-[1.02] active:scale-[0.98]`}
+      {/* ──────────────────────── CATÉGORIES ─────────────────────
+          Grille éditoriale — reste en dessous du fold
+      ──────────────────────────────────────────────────────── */}
+      <section className="bg-earth-100 py-16 sm:py-20">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+
+          <div className="flex items-end justify-between gap-8 mb-10 flex-wrap">
+            <div>
+              <div className="section-label">
+                <span className="section-label-line" />
+                <span className="section-label-text">Explorer par thème</span>
+              </div>
+              <h2
+                className="font-display leading-[0.88] m-0 select-none text-ash-800"
+                style={{ fontSize: "clamp(40px,5.5vw,76px)", letterSpacing: "3px" }}
+              >
+                DONNÉES<br />
+                <span style={{ WebkitTextStroke: "1.5px #E85D04", color: "transparent" }}>
+                  THÉMATIQUES
+                </span>
+              </h2>
+            </div>
+            <p
+              className="font-dm font-light leading-relaxed text-earth-800/50 pb-1"
+              style={{ fontSize: "13px", maxWidth: "200px" }}
             >
-              <cat.Icon className="w-6 h-6" strokeWidth={1.75} />
-              <span className="text-sm font-semibold">{cat.label}</span>
-            </button>
-          ))}
+              9 domaines. Des milliers de datasets indexés depuis les meilleures sources africaines.
+            </p>
+          </div>
+
+          <div>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.num}
+                onClick={() => router.push(`/search?q=${encodeURIComponent(cat.query)}`)}
+                className="cat-row"
+              >
+                {/* Numéro */}
+                <span className="cat-row-num">{cat.num}</span>
+
+                {/* Séparateur */}
+                <span className="cat-row-divider" />
+
+                {/* Tag + Titre */}
+                <span className="cat-row-name">
+                  <span className="cat-row-tag">{cat.tag}</span>
+                  <span className="cat-row-title">
+                    {cat.title.replace(/\n/g, " ")}
+                  </span>
+                </span>
+
+                {/* Description — masquée sur mobile */}
+                <span className="cat-row-desc hidden sm:block">{cat.desc}</span>
+
+                {/* CTA */}
+                <span className="cat-row-cta">
+                  Explorer <span className="cat-cta-bar" />
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Derniers datasets */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 sm:pb-20">
-        <h2 className="text-xl font-display font-bold text-ink mb-5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-          Derniers datasets ajoutés
+      {/* ──────────────────── DERNIERS DATASETS ──────────────────── */}
+      <section className="max-w-5xl mx-auto px-6 sm:px-10 py-16 sm:py-20">
+        <div className="section-label">
+          <span className="section-label-line" />
+          <span className="section-label-text">Dernières données</span>
+        </div>
+        <h2
+          className="font-display mb-10 select-none text-ash-800"
+          style={{ fontSize: "clamp(36px,4.5vw,62px)", lineHeight: 0.9, letterSpacing: "3px" }}
+        >
+          NOUVEAUX<br />
+          <span style={{ WebkitTextStroke: "1.5px #E85D04", color: "transparent" }}>
+            DATASETS
+          </span>
         </h2>
         <RecentDatasets />
       </section>

@@ -2,14 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
-
 :root {
-  --bg: #F0EBE3;
-  --fg: #1A1A2E;
   --terra: #E85D04;
-  --gold: #D4AF37;
-  --savane: #2D6A4F;
+  --gold:  #D4AF37;
 }
 
 * { box-sizing: border-box; }
@@ -20,24 +15,22 @@ html {
 }
 
 body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #F0EBE3;
+  color: #1C2830;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-/* Scrollbar subtile */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #F5EFE6; }
-::-webkit-scrollbar-thumb { background: #E85D04; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #F0EBE3; }
+::-webkit-scrollbar-thumb { background: #E85D04; border-radius: 0; }
 
-/* Kente border animation (décoration) */
+/* ── Barre kente animée ──────────────────── */
 @keyframes kente-slide {
   0%   { background-position: 0% 50%; }
   100% { background-position: 100% 50%; }
 }
-
 .kente-bar {
   height: 3px;
   background: linear-gradient(90deg, #E85D04, #D4AF37, #2D6A4F, #E85D04, #D4AF37);
@@ -45,21 +38,195 @@ body {
   animation: kente-slide 6s linear infinite;
 }
 
-.search-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(232,93,4,0.15), 0 2px 12px rgba(232,93,4,0.18);
+/* ── Label éditorial ─────────────────────── */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
+.section-label-line {
+  display: inline-block;
+  width: 36px;
+  height: 2px;
+  background: #E85D04;
+  flex-shrink: 0;
+}
+.section-label-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #E85D04;
+}
+
+/* ── Tags de suggestion ─────────────────── */
+.suggestion-tag {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  padding: 6px 14px;
+  border: 1px solid rgba(44, 55, 64, 0.18);
+  color: rgba(44, 55, 64, 0.55);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.suggestion-tag:hover {
+  border-color: #E85D04;
+  color: #E85D04;
+}
+
+/* ── Ligne catégorie (remplace les carrés) ── */
+.cat-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 22px 0;
+  border-bottom: 1px solid #E5DDD3;
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s ease, padding-left 0.35s ease;
+}
+.cat-row:first-child { border-top: 1px solid #E5DDD3; }
+.cat-row:hover { background: #FFF8F5; padding-left: 14px; }
+
+/* Barre terra gauche */
+.cat-row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: #E85D04;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.cat-row:hover::before { transform: scaleY(1); }
+
+/* Numéro */
+.cat-row-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: rgba(44, 55, 64, 0.18);
+  transition: color 0.3s ease;
+  flex-shrink: 0;
+  width: 52px;
+}
+.cat-row:hover .cat-row-num { color: #E85D04; }
+
+/* Séparateur vertical */
+.cat-row-divider {
+  width: 1px;
+  height: 40px;
+  background: #E5DDD3;
+  flex-shrink: 0;
+  margin-right: 24px;
+  transition: background 0.3s ease;
+}
+.cat-row:hover .cat-row-divider { background: rgba(232, 93, 4, 0.25); }
+
+/* Bloc tag + titre */
+.cat-row-name {
+  flex-shrink: 0;
+  width: 200px;
+  padding-right: 32px;
+}
+.cat-row-tag {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #E85D04;
+  margin-bottom: 5px;
+}
+.cat-row-title {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(22px, 2.2vw, 32px);
+  line-height: 0.95;
+  letter-spacing: 1.5px;
+  color: #1C2830;
+  transition: color 0.25s ease;
+}
+.cat-row:hover .cat-row-title { color: #E85D04; }
+
+/* Description */
+.cat-row-desc {
+  flex: 1;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(44, 55, 64, 0.50);
+  line-height: 1.65;
+  padding-right: 32px;
+}
+
+/* CTA */
+.cat-row-cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(44, 55, 64, 0.22);
+  transition: color 0.3s ease, gap 0.3s ease;
+}
+.cat-row:hover .cat-row-cta { color: #E85D04; gap: 16px; }
+
+.cat-cta-bar {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  position: relative;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+}
+.cat-cta-bar::after {
+  content: '';
+  position: absolute;
+  right: 0; top: -3px;
+  width: 6px; height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+.cat-row:hover .cat-cta-bar { width: 36px; }
+
+/* ── Animations d'entrée ─────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-1 { animation: slide-up 0.65s 0.05s ease both; }
+.anim-2 { animation: slide-up 0.65s 0.13s ease both; }
+.anim-3 { animation: slide-up 0.65s 0.20s ease both; }
+.anim-4 { animation: slide-up 0.65s 0.26s ease both; }
+.anim-5 { animation: slide-up 0.65s 0.32s ease both; }
+.anim-6 { animation: slide-up 0.65s 0.38s ease both; }
+.anim-7 { animation: slide-up 0.65s 0.44s ease both; }
+
+/* ── Input de recherche ──────────────────── */
+.search-input { outline: none; }
+.search-input:focus { outline: none; }
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
-  .font-display { font-family: 'Plus Jakarta Sans', Inter, sans-serif; }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+  .font-display { font-family: 'Bebas Neue', sans-serif; }
+  .font-dm      { font-family: 'DM Sans', sans-serif; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
   .gradient-terra {
     background: linear-gradient(135deg, #E85D04 0%, #F48C06 50%, #D4AF37 100%);
   }
@@ -68,5 +235,9 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .text-stroke-terra {
+    -webkit-text-stroke: 1.5px #E85D04;
+    color: transparent;
   }
 }

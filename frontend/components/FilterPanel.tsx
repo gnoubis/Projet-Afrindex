@@ -53,8 +53,7 @@ export default function FilterPanel({ filters, onChange, dynamicSources }: Filte
     <div className="bg-white rounded-2xl border border-earth-200 shadow-card p-4 sm:p-5 space-y-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between">
         <h3
-          className="font-bold text-ink"
-          style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
+          className="font-dm font-bold text-ink"
         >
           Filtres
         </h3>

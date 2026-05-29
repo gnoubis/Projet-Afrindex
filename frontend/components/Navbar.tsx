@@ -1,19 +1,30 @@
 import Link from "next/link";
-import { Globe2 } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <nav className="bg-earth-50/80 backdrop-blur-sm border-b border-earth-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <Globe2 className="w-5 h-5 text-terra-500" strokeWidth={1.5} />
+    <nav className="bg-white border-b border-earth-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
           <span
-            className="font-display font-bold text-base sm:text-lg tracking-tight gradient-text"
-            style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
+            className="font-display text-terra-500 tracking-[0.1em] leading-none"
+            style={{ fontSize: "22px" }}
           >
-            Afrindex
+            AFRINDEX
           </span>
+          <span
+            className="hidden sm:block font-dm font-semibold uppercase text-earth-800/40 leading-none mt-px"
+            style={{ fontSize: "9px", letterSpacing: "0.28em" }}
+          >
+            Données africaines
+          </span>
+        </Link>
+
+        <Link
+          href="/search"
+          className="font-dm font-semibold uppercase text-earth-800/50 hover:text-terra-500 transition-colors"
+          style={{ fontSize: "9px", letterSpacing: "0.25em" }}
+        >
+          Rechercher
         </Link>
       </div>
     </nav>

@@ -44,10 +44,7 @@ export default function AdminLoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Globe2 className="w-14 h-14 mx-auto mb-3 text-terra-500" strokeWidth={1.25} />
-          <h1
-            className="mt-3 text-2xl font-bold gradient-text"
-            style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
-          >
+          <h1 className="font-dm mt-3 text-2xl font-bold gradient-text">
             Afrindex Admin
           </h1>
           <p className="mt-1 text-sm text-earth-500">Accès réservé aux administrateurs</p>

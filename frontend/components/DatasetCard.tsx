@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, MapPin, Tag, Star } from "lucide-react";
+import { ExternalLink, MapPin, Tag } from "lucide-react";
 
 interface Dataset {
   id: string;
@@ -26,121 +26,121 @@ interface DatasetCardProps {
 }
 
 const FORMAT_COLORS: Record<string, string> = {
-  CSV:   "bg-savane-400/10 text-savane-600",
-  JSON:  "bg-blue-50 text-blue-600",
-  API:   "bg-purple-50 text-purple-600",
-  Excel: "bg-emerald-50 text-emerald-600",
-  PDF:   "bg-red-50 text-red-500",
+  CSV:   "bg-savane-400/10 text-savane-600 border-savane-400/20",
+  JSON:  "bg-blue-50 text-blue-600 border-blue-100",
+  API:   "bg-purple-50 text-purple-600 border-purple-100",
+  XLSX:  "bg-emerald-50 text-emerald-600 border-emerald-100",
+  EXCEL: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  PDF:   "bg-red-50 text-red-500 border-red-100",
 };
 
-/**
- * Construit une URL de recherche en appliquant UN SEUL filtre (badge cliqué)
- * Ne garde pas la requête précédente - filtre directement par le badge
- */
 function buildBadgeUrl(filterKey: string, filterValue: string): string {
   const params = new URLSearchParams();
   params.set(filterKey, filterValue);
   return `/search?${params.toString()}`;
 }
 
-export default function DatasetCard({ dataset, currentQuery, currentFilters }: DatasetCardProps) {
-  const fmtColor = dataset.format ? (FORMAT_COLORS[dataset.format.toUpperCase()] ?? "bg-earth-100 text-earth-800/60") : "";
+export default function DatasetCard({ dataset }: DatasetCardProps) {
+  const fmtColor =
+    dataset.format
+      ? (FORMAT_COLORS[dataset.format.toUpperCase()] ?? "bg-earth-100 text-earth-800/60 border-earth-200")
+      : "";
 
   return (
-    <div className="group bg-white rounded-2xl border border-earth-200 shadow-card hover:shadow-card-hover hover:border-terra-200 transition-all duration-200 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <Link
-            href={`/dataset/${dataset.id}`}
-            className="text-[15px] font-semibold text-ink hover:text-terra-500 transition-colors line-clamp-2 leading-snug"
-          >
-            {dataset.title}
-          </Link>
+    <div className="group relative bg-white border border-earth-200 overflow-hidden hover:border-ash-200 hover:shadow-card-hover transition-all duration-200">
+      {/* Barre ambrée gauche au hover */}
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-terra-500 origin-bottom scale-y-0 group-hover:scale-y-100 transition-transform duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" />
 
-          {dataset.description && (
-            <p className="text-sm text-earth-800/55 mt-1.5 line-clamp-2 leading-relaxed">
-              {dataset.description}
-            </p>
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <Link
+              href={`/dataset/${dataset.id}`}
+              className="font-dm text-[15px] font-semibold text-ash-800 hover:text-terra-500 transition-colors line-clamp-2 leading-snug block"
+            >
+              {dataset.title}
+            </Link>
+            {dataset.description && (
+              <p className="font-dm text-sm mt-1.5 line-clamp-2 leading-relaxed" style={{ color: "rgba(44,55,64,0.55)" }}>
+                {dataset.description}
+              </p>
+            )}
+          </div>
+
+          {dataset.source_url && (
+            <a
+              href={dataset.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 p-1.5 text-earth-200 hover:text-terra-500 transition-colors"
+              title="Accéder à la source"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
           )}
         </div>
 
-        {dataset.source_url && (
-          <a
-            href={dataset.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 p-1.5 rounded-full text-earth-200 hover:bg-terra-50 hover:text-terra-500 transition-all"
-            title="Accéder à la source"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        )}
-      </div>
+        {/* Badges */}
+        <div className="flex flex-wrap items-center gap-1.5 mt-3">
+          {dataset.source && (
+            <Link
+              href={buildBadgeUrl("source", dataset.source)}
+              className="inline-flex items-center text-[11px] font-dm font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 border border-blue-100 hover:bg-blue-100 transition-colors"
+            >
+              {dataset.source}
+            </Link>
+          )}
+          {dataset.country && (
+            <Link
+              href={buildBadgeUrl("country", dataset.country)}
+              className="inline-flex items-center gap-1 text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20 hover:bg-savane-400/20 transition-colors"
+            >
+              <MapPin className="w-2.5 h-2.5" /> {dataset.country}
+            </Link>
+          )}
+          {dataset.category && (
+            <Link
+              href={buildBadgeUrl("category", dataset.category)}
+              className="inline-flex items-center text-[11px] font-dm font-semibold bg-terra-50 text-terra-600 px-2.5 py-0.5 border border-terra-100 hover:bg-terra-100 transition-colors"
+            >
+              {dataset.category}
+            </Link>
+          )}
+          {dataset.format && (
+            <Link
+              href={buildBadgeUrl("format", dataset.format)}
+              className={`inline-flex items-center text-[11px] font-dm font-semibold px-2.5 py-0.5 border hover:opacity-75 transition-opacity ${fmtColor}`}
+            >
+              {dataset.format}
+            </Link>
+          )}
+          {dataset.tags?.slice(0, 3).map((tag) => (
+            <Link
+              key={tag}
+              href={buildBadgeUrl("q", tag)}
+              className="inline-flex items-center gap-0.5 text-[11px] font-dm text-earth-800/50 bg-earth-100 px-2.5 py-0.5 hover:bg-terra-50 hover:text-terra-600 transition-colors"
+            >
+              <Tag className="w-2.5 h-2.5" /> {tag}
+            </Link>
+          ))}
+        </div>
 
-      {/* Badges */}
-      <div className="flex flex-wrap items-center gap-1.5 mt-3">
-        {dataset.source && (
+        <div className="mt-4 flex items-center justify-between border-t border-earth-100 pt-3">
           <Link
-            href={buildBadgeUrl("source", dataset.source)}
-            title="Source : filtrer par cette source de données"
-            className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100 hover:bg-blue-100 hover:text-blue-700 transition-all cursor-pointer"
+            href={`/dataset/${dataset.id}`}
+            className="font-dm font-semibold uppercase tracking-[0.15em] hover:text-terra-500 transition-colors"
+            style={{ fontSize: "9px", color: "rgba(44,55,64,0.4)" }}
           >
-            {dataset.source}
+            Voir les détails
           </Link>
-        )}
-        {dataset.country && (
           <Link
-            href={buildBadgeUrl("country", dataset.country)}
-            title="Pays : filtrer par ce pays"
-            className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20 hover:bg-savane-400/20 hover:text-savane-700 transition-all cursor-pointer"
+            href={`/dataset/${dataset.id}#reviews`}
+            className="font-dm font-bold uppercase tracking-[0.18em] text-terra-500 hover:text-terra-700 transition-colors"
+            style={{ fontSize: "9px" }}
           >
-            <MapPin className="w-2.5 h-2.5" /> {dataset.country}
+            Donner un avis →
           </Link>
-        )}
-        {dataset.category && (
-          <Link
-            href={buildBadgeUrl("category", dataset.category)}
-            title="Catégorie : filtrer par ce domaine"
-            className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100 hover:bg-terra-100 hover:text-terra-700 transition-all cursor-pointer"
-          >
-            {dataset.category}
-          </Link>
-        )}
-        {dataset.format && (
-          <Link
-            href={buildBadgeUrl("format", dataset.format)}
-            title="Format : filtrer par ce format de fichier"
-            className={`inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full cursor-pointer transition-all hover:opacity-75 ${fmtColor}`}
-          >
-            {dataset.format}
-          </Link>
-        )}
-        {dataset.tags?.slice(0, 3).map((tag) => (
-          <Link
-            key={tag}
-            href={buildBadgeUrl("q", tag)}
-            title="Tag : rechercher ce mot-clé"
-            className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full hover:bg-terra-50 hover:text-terra-600 transition-colors cursor-pointer"
-          >
-            <Tag className="w-2.5 h-2.5" /> {tag}
-          </Link>
-        ))}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-earth-100 pt-3">
-        <Link
-          href={`/dataset/${dataset.id}`}
-          className="text-xs font-medium text-earth-800/55 hover:text-terra-500 transition-colors"
-        >
-          Voir les détails
-        </Link>
-        <Link
-          href={`/dataset/${dataset.id}#reviews`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-terra-50 px-3 py-1.5 text-xs font-semibold text-terra-600 hover:bg-terra-100 transition-colors"
-        >
-          <Star className="w-3.5 h-3.5" strokeWidth={1.75} />
-          Donner un avis
-        </Link>
+        </div>
       </div>
     </div>
   );

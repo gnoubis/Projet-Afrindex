@@ -4,7 +4,7 @@ import { Suspense, startTransition, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X, AlertTriangle, SearchX, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal, X, AlertTriangle, SearchX, ChevronLeft, ChevronRight } from "lucide-react";
 import { searchDatasets, fetchSourceNames, fetchRecentDatasets, fetchSearchSuggestions } from "@/lib/api";
 import DatasetCard from "@/components/DatasetCard";
 import FilterPanel from "@/components/FilterPanel";
@@ -33,7 +33,6 @@ function SearchContent() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
 
-  // Synchronise l'état avec les paramètres d'URL
   useEffect(() => {
     setQuery(searchParams.get("q") || "");
     setInputValue(searchParams.get("q") || "");
@@ -60,7 +59,7 @@ function SearchContent() {
   const { data: sourcesData } = useQuery({
     queryKey: ["source-names"],
     queryFn: fetchSourceNames,
-    staleTime: 60_000 * 10, // 10 min
+    staleTime: 60_000 * 10,
   });
   const { data: suggestionsData } = useQuery({
     queryKey: ["search-empty-suggestions"],
@@ -124,8 +123,6 @@ function SearchContent() {
     setInputValue("");
     setQuery("");
     setPage(1);
-    
-    // Reste sur la page de recherche mais sans résultats
     const hasActiveFilters = Object.values(filters).some(f => f);
     if (!hasActiveFilters) {
       startTransition(() => {
@@ -133,8 +130,6 @@ function SearchContent() {
       });
       return;
     }
-    
-    // Sinon garder les filtres et chercher avec requête vide
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v) params.set(k, v);
@@ -157,20 +152,23 @@ function SearchContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Lien retour */}
-      <a href="/" className="inline-flex items-center gap-1.5 text-sm text-earth-800/60 hover:text-terra-500 transition-colors mb-4">
+      <a href="/" className="inline-flex items-center gap-1.5 text-sm text-earth-800/60 hover:text-terra-500 transition-colors mb-4 font-dm">
         <ChevronLeft className="w-4 h-4" /> Retour à l'accueil
       </a>
 
       {/* Barre de recherche */}
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 mb-6">
-        <div className="flex-1 relative flex items-center bg-white border-2 border-earth-200 rounded-full px-5 py-3 hover:border-terra-300 focus-within:border-terra-400 transition-all shadow-card group">
-          <Search className="w-4 h-4 text-earth-800/30 group-focus-within:text-terra-400 transition-colors flex-shrink-0 mr-3" />
+        <div
+          className="flex-1 flex items-center bg-white border border-earth-200 px-5 py-3.5 hover:border-terra-300 focus-within:border-terra-400 transition-colors"
+          style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}
+        >
+          <Search className="w-4 h-4 text-earth-800/30 flex-shrink-0 mr-3" />
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Rechercher des datasets africains…"
-            className="flex-1 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none"
+            className="flex-1 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none font-dm search-input"
           />
           {inputValue && (
             <button type="button" onClick={handleClearInput} className="ml-2 text-earth-800/30 hover:text-terra-500 transition-colors">
@@ -180,23 +178,24 @@ function SearchContent() {
         </div>
         <button
           type="submit"
-          className="bg-terra-500 text-white font-semibold px-6 py-3 rounded-full hover:bg-terra-600 transition-all shadow-sm hover:shadow-search text-sm w-full sm:w-auto"
+          className="font-dm font-bold uppercase tracking-[0.22em] bg-terra-500 hover:bg-terra-600 text-white px-8 py-3.5 transition-colors whitespace-nowrap border border-terra-500 w-full sm:w-auto"
+          style={{ fontSize: "10px" }}
         >
           Rechercher
         </button>
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex w-full sm:w-auto justify-center items-center gap-2 border px-4 py-3 rounded-full text-sm font-medium transition-all ${
+          className={`flex w-full sm:w-auto justify-center items-center gap-2 border px-5 py-3.5 text-sm font-dm font-medium transition-colors ${
             showFilters || activeFilters.length > 0
               ? "bg-terra-50 border-terra-300 text-terra-600"
-              : "bg-white border-earth-200 text-earth-800/60 hover:bg-earth-50"
+              : "bg-white border-earth-200 text-earth-800/60 hover:border-terra-300"
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
           <span className="hidden sm:inline">Filtres</span>
           {activeFilters.length > 0 && (
-            <span className="bg-terra-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+            <span className="bg-terra-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center">
               {activeFilters.length}
             </span>
           )}
@@ -209,7 +208,7 @@ function SearchContent() {
           {activeFilters.map(([key, value]) => (
             <span
               key={key}
-              className="inline-flex items-center gap-1.5 text-xs font-medium bg-terra-50 text-terra-600 border border-terra-200 px-3 py-1 rounded-full"
+              className="inline-flex items-center gap-1.5 text-xs font-dm font-medium bg-terra-50 text-terra-600 border border-terra-200 px-3 py-1"
             >
               {value}
               <button onClick={() => handleFilterChange(key, "")}>
@@ -219,7 +218,7 @@ function SearchContent() {
           ))}
           <button
             onClick={clearAllFilters}
-            className="text-xs text-earth-800/50 hover:text-red-500 transition-colors underline"
+            className="text-xs font-dm text-earth-800/50 hover:text-red-500 transition-colors underline"
           >
             Effacer tous les filtres
           </button>
@@ -237,24 +236,24 @@ function SearchContent() {
         {/* Résultats */}
         <div className="flex-1 min-w-0">
           {!shouldSearch && (
-            <div className="space-y-5">
-              <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-earth-50">
+            <div className="space-y-6">
+              <div className="text-center py-12 border border-dashed border-earth-200 bg-earth-50">
                 <Search className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
-                <p className="text-earth-800/60 font-medium">Explorez des sujets populaires.</p>
-                <p className="text-earth-800/40 text-sm mt-1">Choisissez une suggestion ou découvrez les derniers datasets ajoutés.</p>
+                <p className="font-dm text-earth-800/60 font-medium">Explorez des sujets populaires.</p>
+                <p className="font-dm text-earth-800/40 text-sm mt-1">Choisissez une suggestion ou découvrez les derniers datasets ajoutés.</p>
               </div>
 
-              <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
-                  <p className="text-sm font-semibold text-earth-800">Recherches suggérées</p>
+              <div className="bg-white border border-earth-200 p-5">
+                <div className="section-label mb-4">
+                  <span className="section-label-line" />
+                  <span className="section-label-text">Recherches suggérées</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {emptySuggestions.map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => openSuggestedSearch(suggestion)}
-                      className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                      className="suggestion-tag"
                     >
                       {suggestion}
                     </button>
@@ -264,9 +263,9 @@ function SearchContent() {
 
               {recentDatasets.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
-                    <p className="text-sm font-semibold text-earth-800">Datasets récents à découvrir</p>
+                  <div className="section-label mb-4">
+                    <span className="section-label-line" />
+                    <span className="section-label-text">Datasets récents à découvrir</span>
                   </div>
                   <div className="grid gap-3">
                     {recentDatasets.map((dataset: any) => (
@@ -277,55 +276,57 @@ function SearchContent() {
               )}
             </div>
           )}
+
           {shouldSearch && isLoading && (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-earth-200 p-5 animate-pulse">
-                  <div className="h-4 bg-earth-100 rounded-full w-2/3 mb-3" />
-                  <div className="h-3 bg-earth-100 rounded-full w-full mb-1.5" />
-                  <div className="h-3 bg-earth-100 rounded-full w-4/5" />
+                <div key={i} className="bg-white border border-earth-200 p-5 animate-pulse">
+                  <div className="h-4 bg-earth-100 rounded w-2/3 mb-3" />
+                  <div className="h-3 bg-earth-100 rounded w-full mb-1.5" />
+                  <div className="h-3 bg-earth-100 rounded w-4/5" />
                 </div>
               ))}
             </div>
           )}
+
           {shouldSearch && isError && (
-            <div className="text-center py-16 rounded-2xl border border-red-100 bg-red-50">
+            <div className="text-center py-16 border border-red-100 bg-red-50">
               <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" strokeWidth={1.5} />
-              <p className="text-red-600 font-medium">Erreur de connexion à l'API.</p>
-              <p className="text-red-400 text-sm mt-1">Vérifiez que le backend est démarré.</p>
+              <p className="font-dm text-red-600 font-medium">Erreur de connexion à l'API.</p>
+              <p className="font-dm text-red-400 text-sm mt-1">Vérifiez que le backend est démarré.</p>
             </div>
           )}
+
           {shouldSearch && data && !isLoading && (
             <>
-              <p className="text-sm text-earth-800/50 mb-4">
+              <p className="font-dm text-sm text-earth-800/50 mb-4">
                 <span className="font-semibold text-ink">{data.total.toLocaleString("fr-FR")}</span> résultat{data.total !== 1 ? "s" : ""}
                 {query && <> pour <span className="font-medium text-terra-500">"{query}"</span></>}
                 <span className="ml-2 text-earth-800/30">— page {page} / {Math.max(1, Math.ceil(data.total / PAGE_SIZE))}</span>
               </p>
 
-              {/* Message explicite si pas de résultats exacts */}
               {data.message && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6 flex gap-3">
+                <div className="bg-yellow-50 border border-yellow-200 p-4 mb-6 flex gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
-                    <p className="text-sm text-yellow-700 font-medium">{data.message}</p>
-                    <p className="text-xs text-yellow-600 mt-1">Affinez votre recherche pour de meilleurs résultats.</p>
+                    <p className="font-dm text-sm text-yellow-700 font-medium">{data.message}</p>
+                    <p className="font-dm text-xs text-yellow-600 mt-1">Affinez votre recherche pour de meilleurs résultats.</p>
                   </div>
                 </div>
               )}
 
               {data.message && alternativeQueries.length > 0 && (
-                <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5 mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
-                    <p className="text-sm font-semibold text-earth-800">Reformuler la recherche</p>
+                <div className="bg-white border border-earth-200 p-4 sm:p-5 mb-6">
+                  <div className="section-label mb-3">
+                    <span className="section-label-line" />
+                    <span className="section-label-text">Reformuler la recherche</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {alternativeQueries.map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => openSuggestedSearch(suggestion)}
-                        className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                        className="suggestion-tag"
                       >
                         {suggestion}
                       </button>
@@ -335,25 +336,25 @@ function SearchContent() {
               )}
 
               {data.results.length === 0 ? (
-                <div className="space-y-5">
-                  <div className="text-center py-12 rounded-2xl border border-dashed border-earth-200 bg-white">
+                <div className="space-y-6">
+                  <div className="text-center py-12 border border-dashed border-earth-200 bg-white">
                     <SearchX className="w-12 h-12 text-earth-200 mx-auto mb-3" strokeWidth={1.25} />
-                    <p className="text-earth-800/60 font-medium">Aucun dataset trouvé.</p>
-                    <p className="text-earth-800/40 text-sm mt-1">On n’a rien trouvé pour cette requête exacte, mais voici d’autres pistes utiles.</p>
+                    <p className="font-dm text-earth-800/60 font-medium">Aucun dataset trouvé.</p>
+                    <p className="font-dm text-earth-800/40 text-sm mt-1">On n'a rien trouvé pour cette requête exacte, mais voici d'autres pistes utiles.</p>
                   </div>
 
                   {alternativeQueries.length > 0 && (
-                    <div className="bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/60 p-4 sm:p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
-                        <p className="text-sm font-semibold text-earth-800">Essayez aussi</p>
+                    <div className="bg-white border border-earth-200 p-4 sm:p-5">
+                      <div className="section-label mb-3">
+                        <span className="section-label-line" />
+                        <span className="section-label-text">Essayez aussi</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {alternativeQueries.map((suggestion) => (
                           <button
                             key={suggestion}
                             onClick={() => openSuggestedSearch(suggestion)}
-                            className="inline-flex items-center rounded-full border border-terra-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-terra-600 hover:bg-terra-50 hover:border-terra-300 transition-all"
+                            className="suggestion-tag"
                           >
                             {suggestion}
                           </button>
@@ -364,9 +365,9 @@ function SearchContent() {
 
                   {alternativeDatasets.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-4 h-4 text-terra-500" strokeWidth={1.75} />
-                        <p className="text-sm font-semibold text-earth-800">Datasets suggérés</p>
+                      <div className="section-label mb-4">
+                        <span className="section-label-line" />
+                        <span className="section-label-text">Datasets suggérés</span>
                       </div>
                       <div className="grid gap-3">
                         {alternativeDatasets.map((dataset: any) => (
@@ -383,47 +384,41 @@ function SearchContent() {
                 </div>
               ) : (
                 <>
-                  {/* Légende des badges - Design amélioré */}
-                  <div className="mb-6 p-4 bg-gradient-to-r from-terra-50 to-earth-50 rounded-2xl border border-terra-100/50">
-                    <p className="text-sm font-semibold text-earth-800 mb-3">Comprendre les badges :</p>
+                  {/* Légende des badges */}
+                  <div className="mb-6 p-4 bg-white border border-earth-200">
+                    <p className="font-dm text-xs font-bold uppercase tracking-[0.2em] text-earth-800/40 mb-3">Comprendre les badges</p>
                     <div className="flex flex-wrap gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-medium bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full border border-blue-100">
+                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-blue-50 text-blue-600 px-2.5 py-0.5 border border-blue-100">
                           HDX
                         </span>
-                        <span className="text-xs text-earth-700">Source de données</span>
+                        <span className="font-dm text-xs text-earth-700">Source</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20">
-                          🌍 Mali
+                        <span className="inline-flex items-center gap-1 text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20">
+                          Mali
                         </span>
-                        <span className="text-xs text-earth-700">Pays couvert</span>
+                        <span className="font-dm text-xs text-earth-700">Pays</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-medium bg-terra-50 text-terra-600 px-2.5 py-0.5 rounded-full border border-terra-100">
+                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-terra-50 text-terra-600 px-2.5 py-0.5 border border-terra-100">
                           Santé
                         </span>
-                        <span className="text-xs text-earth-700">Domaine</span>
+                        <span className="font-dm text-xs text-earth-700">Domaine</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center text-[11px] font-medium bg-savane-400/10 text-savane-600 px-2.5 py-0.5 rounded-full border border-savane-400/20">
+                        <span className="inline-flex items-center text-[11px] font-dm font-semibold bg-savane-400/10 text-savane-600 px-2.5 py-0.5 border border-savane-400/20">
                           CSV
                         </span>
-                        <span className="text-xs text-earth-700">Format du fichier</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-0.5 text-[11px] text-earth-800/50 bg-earth-100 px-2.5 py-0.5 rounded-full">
-                          🏷️ Tag
-                        </span>
-                        <span className="text-xs text-earth-700">Mot-clé</span>
+                        <span className="font-dm text-xs text-earth-700">Format</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid gap-3">
                     {data.results.map((dataset: any) => (
-                      <DatasetCard 
-                        key={dataset.id} 
+                      <DatasetCard
+                        key={dataset.id}
                         dataset={dataset}
                         currentQuery={query}
                         currentFilters={filters}
@@ -437,12 +432,11 @@ function SearchContent() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-earth-200 bg-white text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" /> Précédent
                       </button>
 
-                      {/* Numéros de page */}
                       <div className="flex items-center gap-1">
                         {(() => {
                           const total = Math.ceil(data.total / PAGE_SIZE);
@@ -458,15 +452,15 @@ function SearchContent() {
                           }
                           return pages.map((p, i) =>
                             p === "..." ? (
-                              <span key={`ellipsis-${i}`} className="px-1 text-earth-800/30 text-sm">…</span>
+                              <span key={`ellipsis-${i}`} className="px-1 text-earth-800/30 font-dm text-sm">…</span>
                             ) : (
                               <button
                                 key={p}
                                 onClick={() => setPage(p as number)}
-                                className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
+                                className={`w-8 h-8 font-dm text-sm font-medium transition-colors ${
                                   page === p
-                                    ? "bg-terra-500 text-white shadow-sm"
-                                    : "text-earth-800/60 hover:bg-earth-100"
+                                    ? "bg-terra-500 text-white"
+                                    : "text-earth-800/60 hover:bg-earth-100 border border-earth-200"
                                 }`}
                               >
                                 {p}
@@ -479,7 +473,7 @@ function SearchContent() {
                       <button
                         onClick={() => setPage((p) => Math.min(Math.ceil(data.total / PAGE_SIZE), p + 1))}
                         disabled={page >= Math.ceil(data.total / PAGE_SIZE)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-earth-200 bg-white text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 border border-earth-200 bg-white font-dm text-sm font-medium text-earth-800/60 hover:border-terra-300 hover:text-terra-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         Suivant <ChevronRight className="w-4 h-4" />
                       </button>
