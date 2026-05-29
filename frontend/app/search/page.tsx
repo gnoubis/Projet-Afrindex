@@ -138,28 +138,32 @@ function SearchContent() {
       {/* Barre de recherche — pill style */}
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
         <div
-          className="flex-1 flex items-center bg-white rounded-full border border-earth-200 pl-5 pr-2 py-2 hover:shadow-md focus-within:shadow-md focus-within:border-terra-300 transition-all"
+          className="flex-1 flex items-center bg-white rounded-full border border-earth-200 pl-4 sm:pl-5 pr-2 py-2 hover:shadow-md focus-within:shadow-md focus-within:border-terra-300 transition-all"
           style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.07)" }}
         >
-          <Search className="w-4 h-4 text-earth-800/30 flex-shrink-0 mr-3" />
+          <Search className="w-4 h-4 text-earth-800/30 flex-shrink-0 mr-2 sm:mr-3" />
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Rechercher des datasets africains…"
-            className="flex-1 py-1.5 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none font-dm search-input"
+            placeholder="Rechercher…"
+            className="flex-1 py-1.5 bg-transparent text-ink placeholder-earth-800/30 text-sm outline-none font-dm search-input min-w-0"
           />
           {inputValue && (
-            <button type="button" onClick={handleClearInput} className="mr-2 text-earth-800/30 hover:text-terra-500 transition-colors">
+            <button type="button" onClick={handleClearInput} className="mr-1 sm:mr-2 text-earth-800/30 hover:text-terra-500 transition-colors flex-shrink-0">
               <X className="w-4 h-4" />
             </button>
           )}
           <button
             type="submit"
-            className="font-dm font-bold uppercase tracking-[0.18em] bg-terra-500 hover:bg-terra-600 text-white px-5 py-2 rounded-full transition-colors whitespace-nowrap flex-shrink-0"
-            style={{ fontSize: "10px" }}
+            className="flex-shrink-0 bg-terra-500 hover:bg-terra-600 text-white rounded-full transition-colors"
           >
-            Rechercher
+            <span className="flex sm:hidden items-center justify-center w-9 h-9">
+              <Search className="w-4 h-4" />
+            </span>
+            <span className="hidden sm:flex items-center font-dm font-bold uppercase tracking-[0.18em] px-5 py-2" style={{ fontSize: "10px" }}>
+              Rechercher
+            </span>
           </button>
         </div>
 

@@ -88,7 +88,7 @@ export default function HomePage() {
   return (
     <div>
       {/* ─────────────────────── HERO ───────────────────────── */}
-      <section className="bg-earth-50 flex flex-col items-center px-4 sm:px-8 pt-24 sm:pt-36 pb-20 sm:pb-32">
+      <section className="bg-earth-50 flex flex-col items-center px-4 sm:px-8 pt-14 sm:pt-36 pb-14 sm:pb-32">
 
         {/* Logo */}
         <div className="text-center mb-10 anim-1">
@@ -106,33 +106,38 @@ export default function HomePage() {
         {/* Barre de recherche — pill Google */}
         <form onSubmit={handleSearch} className="w-full max-w-2xl mb-6 anim-2">
           <div
-            className="flex items-center bg-white rounded-full border border-earth-200 pl-6 pr-2 py-2 hover:shadow-lg focus-within:shadow-lg focus-within:border-terra-300 transition-all"
+            className="flex items-center bg-white rounded-full border border-earth-200 pl-4 sm:pl-6 pr-2 py-2 hover:shadow-lg focus-within:shadow-lg focus-within:border-terra-300 transition-all"
             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
           >
-            <Search className="w-5 h-5 flex-shrink-0 text-earth-800/30 mr-3" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-earth-800/30 mr-2 sm:mr-3" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher des données africaines…"
-              className="flex-1 py-2 bg-transparent text-ash-800 placeholder-earth-800/30 text-base search-input font-dm"
+              placeholder="Rechercher…"
+              className="flex-1 py-2 bg-transparent text-ash-800 placeholder-earth-800/30 text-sm sm:text-base search-input font-dm min-w-0"
               autoFocus
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="mr-2 text-earth-800/30 hover:text-terra-500 transition-colors"
+                className="mr-1 sm:mr-2 text-earth-800/30 hover:text-terra-500 transition-colors flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
+            {/* Mobile : icône seule — Desktop : texte complet */}
             <button
               type="submit"
-              className="font-dm font-bold uppercase tracking-[0.18em] bg-terra-500 hover:bg-terra-600 text-white px-6 py-3 rounded-full transition-colors whitespace-nowrap flex-shrink-0"
-              style={{ fontSize: "10px" }}
+              className="flex-shrink-0 bg-terra-500 hover:bg-terra-600 text-white rounded-full transition-colors"
             >
-              Rechercher
+              <span className="flex sm:hidden items-center justify-center w-10 h-10">
+                <Search className="w-4 h-4" />
+              </span>
+              <span className="hidden sm:flex items-center font-dm font-bold uppercase tracking-[0.18em] px-6 py-3" style={{ fontSize: "10px" }}>
+                Rechercher
+              </span>
             </button>
           </div>
         </form>
